@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<message:StructureSpecificData xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:ss="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/data/structurespecific">
+<message:DataSet ss:structureRef="BBK_BBSIS">
+<Series BBK_STD_FREQ="D" BBK_SERIES_TYPE="R10XX">
+<Obs TIME_PERIOD="2026-10-07" OBS_VALUE="3.55" BBK_OBS_STATUS="A"/>
+<Obs TIME_PERIOD="2026-10-08" OBS_VALUE="3.57" BBK_OBS_STATUS="A"/>
+<Obs TIME_PERIOD="2026-10-09" OBS_VALUE="3.53" BBK_OBS_STATUS="A"/>
+<Obs TIME_PERIOD="2026-10-10" OBS_VALUE="NaN"/>
+</Series></message:DataSet></message:StructureSpecificData>

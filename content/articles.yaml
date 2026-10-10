@@ -1,0 +1,95 @@
+# Research library – one entry per article. This is the ONLY file to edit to add research.
+#
+# Medium articles are also discovered automatically from https://medium.com/feed/@ishritt
+# (the feed only carries the latest 10 posts). An entry here with the same URL overrides the
+# feed's metadata – use it to set the category, tags, description and `featured`.
+# LinkedIn has no public API: add LinkedIn articles here by hand (platform: LinkedIn).
+#
+# Fields: title, url, date (YYYY-MM-DD, original publication), platform (Medium|LinkedIn|Other),
+#         category (one of the categories below), tags (list), description (1–2 sentences, describe
+#         what the piece analyses – do not add findings that are not in the article), featured (bool).
+categories:
+  - Monetary policy
+  - Interest rates
+  - Yield curves
+  - Inflation & labour
+  - Liquidity
+  - Cross-asset macro
+  - Global markets
+  - Portfolio construction & risk
+  - Trading process & market structure
+  - Foundations
+
+articles:
+  - title: "Beyond the Headline Numbers"
+    url: "https://ishritt.medium.com/beyond-the-headline-numbers-c437b3a03919"
+    date: "2026-09-10"
+    platform: Medium
+    category: Monetary policy
+    tags: [Fed, Jackson Hole, payrolls, labour market, FOMC]
+    description: "Reads the Jackson Hole remarks and the latest payrolls report for what they imply about the Fed's reaction function into the September FOMC, including labour-force growth and breakeven employment, Treasury buybacks and the upcoming CPI/PPI releases."
+    featured: true
+  - title: "What Removes the Hike?"
+    url: "https://ishritt.medium.com/what-removes-the-hike-6469d8af208d"
+    date: "2026-08-18"
+    platform: Medium
+    category: Interest rates
+    tags: [Fed, dual mandate, Treasuries, oil, inflation]
+    description: "Asks whether the Fed's employment and inflation mandates point to different actions, and what would remove the hike premium priced into rates – drawing on 2Y and 30Y Treasury yields, July payrolls, CPI/PPI and crude oil."
+    featured: true
+  - title: "The Markets tightened for the Fed"
+    url: "https://ishritt.medium.com/the-markets-tightened-for-the-fed-b71bed67ead4"
+    date: "2026-08-02"
+    platform: Medium
+    category: Yield curves
+    tags: [FOMC, long end, 30Y, financial conditions, PCE]
+    description: "Examines how the long end of the Treasury curve responded to the July 2026 FOMC hold, the dissents and the press conference, and whether markets tightened conditions on the Fed's behalf."
+    featured: true
+  - title: "The Price of Oil, the Price of Money"
+    url: "https://ishritt.medium.com/the-price-of-oil-the-price-of-money-8c3793d05192"
+    date: "2026-07-24"
+    platform: Medium
+    category: Inflation & labour
+    tags: [CPI, oil, geopolitics, 30Y, ECB]
+    description: "Considers whether softer June inflation data can hold Treasury yields lower while oil and geopolitical risk move higher, and what that means for the Fed into the July FOMC."
+    featured: false
+  - title: "Here comes inflation?"
+    url: "https://ishritt.medium.com/here-comes-inflation-8ac115d9cd40"
+    date: "2026-07-13"
+    platform: Medium
+    category: Inflation & labour
+    tags: [inflation, PMIs, payrolls, FOMC minutes, forward rates]
+    description: "Assesses whether inflation is becoming the dominant driver of US rates pricing ahead of the CPI release and July FOMC, using PMIs, payrolls, FOMC minutes, the Monetary Policy Report, oil, gold and one-year forward rates."
+    featured: false
+  - title: "The Regime Change"
+    url: "https://ishritt.medium.com/the-regime-change-09b09187af71"
+    date: "2026-07-03"
+    platform: Medium
+    category: Cross-asset macro
+    tags: [regimes, Fed communication, dollar, gold, equities, AI]
+    description: "A macro note on how Fed communication, AI-led equity leadership and geopolitical risk may be changing which factors drive markets – covering front-end repricing, the dollar index, gold and US equities."
+    featured: false
+  - title: "Markets: Prepping to trade"
+    url: "https://ishritt.medium.com/markets-prepping-to-trade-fc5f1b2aa20f"
+    date: "2021-06-03"
+    platform: Medium
+    category: Trading process & market structure
+    tags: [process, risk limits, journaling]
+    description: "Early note on trading preparation: discipline and psychology, strategy components (entries, exits, risk, sizing) and practice routines such as calendars, risk limits and journals."
+    featured: false
+  - title: "Markets: The Indicators"
+    url: "https://ishritt.medium.com/markets-the-indicators-51051d96ebe5"
+    date: "2021-06-02"
+    platform: Medium
+    category: Foundations
+    tags: [economic indicators, GDP, CPI, central banks]
+    description: "Early primer on widely used economic indicators – surveys, leading and lagging indicators, GDP, CPI, unemployment and currencies – and the roles of central banks and fiscal policy."
+    featured: false
+  - title: "Markets: Basic Principles"
+    url: "https://ishritt.medium.com/markets-basic-principles-b2bd78dd4344"
+    date: "2021-05-20"
+    platform: Medium
+    category: Foundations
+    tags: [economic machine, credit cycle, business cycle]
+    description: "Early primer outlining basic market principles: economic processes, money and credit, business cycles and the role of politics."
+    featured: false

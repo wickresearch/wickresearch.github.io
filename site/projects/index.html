@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects — Wick Research</title>
+<meta name="description" content="Analytical projects by Ishrit Tewari: the Wick macro terminal and data pipeline, rates risk and sizing tools, event studies and regime analysis.">
+<link rel="canonical" href="https://wickresearch.github.io/projects/">
+<meta name="theme-color" content="#0D1B2A">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Wick Research">
+<meta property="og:title" content="Projects — Wick Research">
+<meta property="og:description" content="Analytical projects by Ishrit Tewari: the Wick macro terminal and data pipeline, rates risk and sizing tools, event studies and regime analysis.">
+<meta property="og:url" content="https://wickresearch.github.io/projects/">
+<meta property="og:image" content="https://wickresearch.github.io/assets/img/og-image.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/mark-32.png">
+<link rel="apple-touch-icon" href="/assets/img/mark-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Wick Research", "url": "https://wickresearch.github.io/", "logo": "https://wickresearch.github.io/assets/img/mark-512.jpg", "founder": {"@type": "Person", "name": "Ishrit Tewari", "sameAs": ["https://www.linkedin.com/in/ishrit-tewari", "https://medium.com/@ishritt"]}, "sameAs": ["https://www.linkedin.com/company/wick-research/"]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-nav">
+  <div class="container">
+    <a class="brand" href="/"><img src="/assets/img/mark-64.png" alt="" width="34" height="34">Wick Research</a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <nav class="nav-links" id="nav-links" aria-label="Main">
+      <a href="/terminal/" class="nav-cta">Macro Terminal</a>
+      <a href="/research/">Research</a>
+      <a href="/framework/">Framework</a>
+      <a href="/projects/" aria-current="page">Projects</a>
+      <a href="/about/">About</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="section">
+  <div class="container">
+    <div class="eyebrow">Projects</div>
+    <h1>Analytical work</h1>
+    <p class="lede">Tools built to support the research process. Each one is live on this site and documented in the <a href="https://github.com/wickresearch/wickresearch.github.io" rel="noopener">public repository</a>.</p>
+    <div class="grid cols-2" style="margin-top:26px">
+      <div class="card"><h3>Wick macro terminal</h3>
+        <p class="muted">A compact macro workspace covering rates and curves (US, Germany, UK, Japan, Canada), the Fed's front end, central-bank policy, US liquidity, inflation and labour, cross-asset analytics, and risk. All data is end-of-day or latest-published from public sources, and each series shows its provider, data type and timestamps.</p>
+        <div class="links"><a href="/terminal/">Open the terminal →</a> · <a href="/terminal/#library">FRED library →</a></div></div>
+      <div class="card"><h3>Verified data pipeline</h3>
+        <p class="muted">A Python pipeline run on a schedule by GitHub Actions. It draws on nine official providers (FRED, NY Fed, U.S. Treasury and FiscalData, Bundesbank, Bank of England, Bank of Canada, MoF Japan, BIS) plus Coinbase and handles retries, validation, incremental updates and last-known-good fallback. Every source was tested before it was used, and the record is published.</p>
+        <div class="links"><a href="https://github.com/wickresearch/wickresearch.github.io/blob/main/docs/DATA_SOURCES.md" rel="noopener">Data-source matrix →</a></div></div>
+      <div class="card"><h3>Rates risk and position sizing</h3>
+        <p class="muted">DV01 by curve bucket for Treasury and STIR-futures positions, with parallel, steepening, flattening and policy-repricing shocks and replays of historical curve moves. Position sizing is computed from volatility, stop distance, DV01 budget and margin, with correlation to the existing book.</p>
+        <div class="links"><a href="/terminal/#risk">Risk module →</a></div></div>
+      <div class="card"><h3>Portfolio risk and stress testing</h3>
+        <p class="muted">For a user-defined multi-asset portfolio: volatility, drawdown, Sharpe and Sortino ratios, historical VaR and expected shortfall, and component risk contributions. Includes historical episode replays and factor-shock scenarios that show their betas and assumptions.</p>
+        <div class="links"><a href="/terminal/#risk">Risk module →</a></div></div>
+      <div class="card"><h3>Event studies</h3>
+        <p class="muted">How yields, the dollar, equities and commodities moved around FOMC decisions, CPI and payrolls releases, and policy-rate changes. Shows the mean and interquartile path and the per-event table. Event dates come from official calendars and FRED release dates.</p>
+        <div class="links"><a href="/terminal/#events">Event studies →</a></div></div>
+      <div class="card"><h3>Growth and inflation regimes</h3>
+        <p class="muted">A deliberately simple, publication-lagged classification by the direction of growth and inflation, with subsequent asset behaviour in each regime. It is descriptive, shows sample sizes, and is not used as a trading signal.</p>
+        <div class="links"><a href="/terminal/#regimes">Regimes →</a></div></div>
+    </div>
+    <h2 style="margin-top:48px">Earlier professional tooling</h2>
+    <p class="muted" style="max-width:74ch">From previous roles, described at the level given in the CV and without proprietary detail:</p>
+    <ul class="muted" style="max-width:74ch">
+      <li>Automated trading and monitoring tools for discretionary rates strategies (Futures First), which improved execution speed by 60% and accuracy by 90%.</li>
+      <li>Analytics tools for NSE options market-making portfolios, plus backtests of statistical-arbitrage and volatility strategies (Alphom Advisory).</li>
+      <li>Systematic BTC perpetual-futures trading and market-making infrastructure across 15+ digital assets (Windfall Research).</li>
+    </ul>
+  </div>
+</section>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div>
+      <div style="color:var(--cream);font-weight:600">Wick Research</div>
+      <div>© <span data-year></span> Ishrit Tewari · London</div>
+      <p class="disclaimer">Research and educational material only. Nothing on this site is investment advice or an offer to buy or sell any security. Market data is end-of-day or latest-published from public sources, attributed on each series, and may be delayed, revised or unavailable.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/terminal/">Terminal</a><a href="/research/">Research</a><a href="/framework/">Framework</a>
+      <a href="/projects/">Projects</a><a href="/about/">About</a>
+      <a href="https://www.linkedin.com/company/wick-research/" rel="noopener">LinkedIn</a>
+      <a href="https://medium.com/@ishritt" rel="noopener">Medium</a>
+    </nav>
+  </div>
+</footer>
+<script type="module" src="/assets/js/site.js"></script>
+</body>
+</html>

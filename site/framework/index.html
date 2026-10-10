@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investment framework — Wick Research</title>
+<meta name="description" content="How Wick Research approaches global macro and rates: central-bank reaction functions, rates expectations and curves, relative value, cross-asset confirmation, and portfolio-level risk.">
+<link rel="canonical" href="https://wickresearch.github.io/framework/">
+<meta name="theme-color" content="#0D1B2A">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Wick Research">
+<meta property="og:title" content="Investment framework — Wick Research">
+<meta property="og:description" content="How Wick Research approaches global macro and rates: central-bank reaction functions, rates expectations and curves, relative value, cross-asset confirmation, and portfolio-level risk.">
+<meta property="og:url" content="https://wickresearch.github.io/framework/">
+<meta property="og:image" content="https://wickresearch.github.io/assets/img/og-image.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/mark-32.png">
+<link rel="apple-touch-icon" href="/assets/img/mark-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Wick Research", "url": "https://wickresearch.github.io/", "logo": "https://wickresearch.github.io/assets/img/mark-512.jpg", "founder": {"@type": "Person", "name": "Ishrit Tewari", "sameAs": ["https://www.linkedin.com/in/ishrit-tewari", "https://medium.com/@ishritt"]}, "sameAs": ["https://www.linkedin.com/company/wick-research/"]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-nav">
+  <div class="container">
+    <a class="brand" href="/"><img src="/assets/img/mark-64.png" alt="" width="34" height="34">Wick Research</a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <nav class="nav-links" id="nav-links" aria-label="Main">
+      <a href="/terminal/" class="nav-cta">Macro Terminal</a>
+      <a href="/research/">Research</a>
+      <a href="/framework/" aria-current="page">Framework</a>
+      <a href="/projects/">Projects</a>
+      <a href="/about/">About</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="section">
+  <div class="container prose">
+    <div class="eyebrow">Investment framework</div>
+    <h1>How the research turns into risk</h1>
+    <p class="lede">A macro process works best when it is explicit about four separate decisions: the view, how to express it, what to hedge, and how much of the portfolio it deserves. This page sets out how Wick Research approaches each of them. Every section links to the terminal module where the analysis can be checked against data.</p>
+
+    <h2>1. View, expression, hedge, allocation</h2>
+    <p>These are four different questions, and confusing them is a common source of poor outcomes.</p>
+    <ul>
+      <li><strong>Market view</strong>: a statement about the world relative to what is priced. Example: "the policy rate path will be higher than the market currently implies over the next two meetings." A view with no reference to pricing is not yet tradeable.</li>
+      <li><strong>Trade expression</strong>: the instrument and structure that isolate that view with the best payoff for the risk. The same view can be held through STIR futures in a specific contract month, a curve spread, or a cross-market spread. Each carries different carry, liquidity and unintended exposures.</li>
+      <li><strong>Hedge</strong>: what is removed on purpose, such as duration, the level of the curve, beta to equities or dollar exposure. The goal is that the P&amp;L reflects the thesis rather than a correlated factor.</li>
+      <li><strong>Portfolio allocation</strong>: sizing by risk contribution (DV01 or volatility), correlation with existing positions and the loss that would invalidate the thesis. This is not decided by conviction alone.</li>
+    </ul>
+    <p class="small muted">Tools: <a href="/terminal/#risk">risk, DV01 and position-sizing calculators</a>.</p>
+
+    <h2>2. Top-down macro analysis</h2>
+    <p>The starting point is growth, inflation, labour markets, policy and liquidity, read for the change at the margin rather than the level. Official data are always shown with both the observation period and the publication date, because markets trade releases rather than months. Model estimates such as GDPNow are labelled as estimates.</p>
+    <p class="small muted">Tools: <a href="/terminal/#macro">inflation, labour and activity</a> · <a href="/terminal/#calendar">release calendar</a>.</p>
+
+    <h2>3. Central-bank reaction functions</h2>
+    <p>Policy is the main driver of the front end, so the core question is what each central bank is reacting to and how its communication shifts the distribution of outcomes. In practice that means tracking the dual-mandate trade-off, the dot plot against market pricing, dissents, and how officials frame incoming data. Recent notes on this include <a href="https://ishritt.medium.com/what-removes-the-hike-6469d8af208d" rel="noopener">What Removes the Hike?</a> and <a href="https://ishritt.medium.com/beyond-the-headline-numbers-c437b3a03919" rel="noopener">Beyond the Headline Numbers</a>.</p>
+    <div class="callout"><strong>Precision on rates.</strong> Several different things are all called "the rate". <em>Administered rates</em> (the target range, IORB, the ON RRP rate) are set by the Fed. <em>Overnight market rates</em> (EFFR, SOFR, TGCR) are transacted within that corridor. <em>Futures-implied rates</em> reflect expected averages over a contract period plus risk premia. <em>Treasury yields</em> add term premium and supply effects on top. The terminal labels every series with its type.</div>
+    <p class="small muted">Tools: <a href="/terminal/#frontend">front end and Fed</a> · <a href="/terminal/#cb">central banks</a>.</p>
+
+    <h2>4. Rates expectations and yield curves</h2>
+    <p>Curve moves are broken down into what the front end says about expected policy and what the long end says about term premium, inflation compensation and supply. Bull and bear steepeners and flatteners are read in that context. For example, a bear steepener driven by term premium has different implications from one driven by expected policy, and long-end moves after a central-bank meeting can tighten or ease financial conditions on the bank's behalf (<a href="https://ishritt.medium.com/the-markets-tightened-for-the-fed-b71bed67ead4" rel="noopener">The Markets tightened for the Fed</a>).</p>
+    <p class="small muted">Tools: <a href="/terminal/#rates">curves, spreads, real yields and breakevens</a>.</p>
+
+    <h2>5. Relative value</h2>
+    <p>Relative value compares like with like: points on the same curve, the same tenor across countries, and futures against the underlying rate. Percentiles and z-scores show where a spread sits historically. They are treated as context rather than signals, because the historical window can contain a different regime.</p>
+
+    <h2>6. Cross-asset confirmation</h2>
+    <p>A rates view is more credible when other markets agree: the dollar, breakevens, equities, oil and gold. Correlations between them change with the regime (for example, the equity–bond correlation flips between inflation-driven and growth-driven periods), so the terminal shows rolling windows and never treats correlation as causation (<a href="https://ishritt.medium.com/the-regime-change-09b09187af71" rel="noopener">The Regime Change</a>; <a href="https://ishritt.medium.com/the-price-of-oil-the-price-of-money-8c3793d05192" rel="noopener">The Price of Oil, the Price of Money</a>).</p>
+    <p class="small muted">Tools: <a href="/terminal/#cross">cross-asset correlations, volatility and drawdowns</a> · <a href="/terminal/#events">event studies</a> · <a href="/terminal/#regimes">regimes</a>.</p>
+
+    <h2>7. Portfolio-level risk management</h2>
+    <ul>
+      <li>Rates risk is budgeted in DV01 by curve bucket, so that parallel, steepening and policy-repricing shocks can be read directly.</li>
+      <li>Every position has an invalidation level defined before entry, and size follows from the loss at that level.</li>
+      <li>Portfolio risk is judged on volatility, historical VaR and expected shortfall, drawdown, and each position's contribution to total risk, not position by position.</li>
+      <li>Scenario analysis replays actual historical episodes and applies explicit hypothetical shocks. Scenarios describe exposure. They are not forecasts.</li>
+    </ul>
+
+    <h2>8. Quantitative tools in support of discretion</h2>
+    <p>Systematic tools are used to measure and implement, not to replace judgement. They make the data reproducible, show what is priced, quantify how markets behaved around comparable events, and size risk consistently. The terminal and its data pipeline are open, documented and tested, so every number can be traced to its source.</p>
+
+    <p class="small muted" style="margin-top:36px">This page describes a general research approach. It does not disclose proprietary strategies or client information and is not investment advice.</p>
+  </div>
+</section>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div>
+      <div style="color:var(--cream);font-weight:600">Wick Research</div>
+      <div>© <span data-year></span> Ishrit Tewari · London</div>
+      <p class="disclaimer">Research and educational material only. Nothing on this site is investment advice or an offer to buy or sell any security. Market data is end-of-day or latest-published from public sources, attributed on each series, and may be delayed, revised or unavailable.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/terminal/">Terminal</a><a href="/research/">Research</a><a href="/framework/">Framework</a>
+      <a href="/projects/">Projects</a><a href="/about/">About</a>
+      <a href="https://www.linkedin.com/company/wick-research/" rel="noopener">LinkedIn</a>
+      <a href="https://medium.com/@ishritt" rel="noopener">Medium</a>
+    </nav>
+  </div>
+</footer>
+<script type="module" src="/assets/js/site.js"></script>
+</body>
+</html>

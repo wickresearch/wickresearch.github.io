@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- Copy this file (and 404.html) into the OLD macroalphaconsultancy.github.io repository.
+     Every old URL forwards to the same path on wickresearch.github.io; old dashboard pages map to the terminal. -->
+<html lang="en"><head><meta charset="utf-8"><title>Wick Research has moved</title>
+<meta name="robots" content="noindex"><link rel="canonical" href="https://wickresearch.github.io/">
+<script>
+(function () {
+  var map = { "/dashboard.html": "/terminal/", "/markets.html": "/terminal/#markets", "/ratescurve.html": "/terminal/#rates",
+    "/cbp.html": "/terminal/#cb", "/liquidity.html": "/terminal/#liquidity", "/macrodata.html": "/terminal/#macro",
+    "/globalbonds.html": "/terminal/#global", "/commodities.html": "/terminal/#markets" };
+  var p = location.pathname;
+  location.replace("https://wickresearch.github.io" + (map[p] || p) + (map[p] ? "" : location.search + location.hash));
+})();
+</script>
+<meta http-equiv="refresh" content="2; url=https://wickresearch.github.io/"></head>
+<body style="background:#0D1B2A;color:#E8E8E8;font-family:system-ui;padding:40px">
+<p>Wick Research has moved to <a style="color:#F2EECF" href="https://wickresearch.github.io/">wickresearch.github.io</a>.</p></body></html>

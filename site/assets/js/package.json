@@ -1,0 +1,1 @@
+{"type": "module", "private": true, "description": "Marks the front-end JS as ES modules for node --test"}

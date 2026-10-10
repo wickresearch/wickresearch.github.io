@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wick Macro Terminal</title>
+<meta name="description" content="An open macro research terminal covering rates and yield curves, the Fed's front end, central-bank policy, US liquidity, inflation and labour, cross-asset analytics and portfolio risk, built on verified public data with timestamps and sources.">
+<link rel="canonical" href="https://wickresearch.github.io/terminal/">
+<meta name="theme-color" content="#0D1B2A">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Wick Research">
+<meta property="og:title" content="Wick Macro Terminal">
+<meta property="og:description" content="Rates, central banks, liquidity, inflation and cross-asset analytics on verified public data – with sources and timestamps on every series.">
+<meta property="og:url" content="https://wickresearch.github.io/terminal/">
+<meta property="og:image" content="https://wickresearch.github.io/assets/img/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="apple-touch-icon" href="/assets/img/mark-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/vendor/uplot/uPlot.min.css">
+<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/terminal.css">
+<link rel="modulepreload" href="/assets/js/terminal/app.js">
+</head>
+<body class="terminal">
+<a class="skip" href="#view">Skip to content</a>
+<header class="t-top">
+  <a class="brand" href="/" title="Wick Research home"><img src="/assets/img/mark-64.png" alt="" width="28" height="28"><span>Wick Research</span></a>
+  <span class="t-title">Macro Terminal</span>
+  <div class="t-status" id="datastatus" aria-live="polite"><span class="dot"></span><span>Checking data…</span></div>
+  <nav class="t-links" aria-label="Site"><a href="/research/">Research</a><a href="/about/">About</a></nav>
+</header>
+<div class="t-body">
+  <nav class="t-nav" id="modnav" aria-label="Terminal modules"></nav>
+  <main class="t-main" id="view" tabindex="-1" aria-live="polite">
+    <noscript><p class="err">The terminal needs JavaScript. The research library and profile pages work without it.</p></noscript>
+  </main>
+</div>
+<footer class="t-foot">
+  Research tool, not a licensed market-data terminal. All data is end-of-day or latest-published from public sources, attributed per series; nothing is real-time. Not investment advice. Charts: <a href="https://github.com/leeoniya/uPlot" rel="noopener">uPlot</a> (MIT).
+</footer>
+<script type="module" src="/assets/js/terminal/app.js"></script>
+</body>
+</html>

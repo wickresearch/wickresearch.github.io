@@ -1,0 +1,21 @@
+# Manually triggered: one representative call per data provider from a GitHub runner.
+# Use after adding a provider or when a source looks broken. Results: job summary + artifact.
+name: Probe data sources
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Probe
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          python -m pipeline.probe --out probe.json | tee probe.txt
+          { echo '## Source probe'; echo '```'; cat probe.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with: {name: probe-report, path: probe.json}

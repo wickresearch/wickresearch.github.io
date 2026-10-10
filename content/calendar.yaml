@@ -1,0 +1,129 @@
+# Central-bank policy meeting dates, transcribed from official pages.
+# Last verified: 2026-10-10. Update once a year (or when a bank publishes its next schedule).
+# `date` = decision/announcement day (for two-day meetings, the second day).
+verified_on: "2026-10-10"
+banks:
+  Fed:
+    name: "Federal Reserve – FOMC"
+    source: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    note: "* = Summary of Economic Projections. 2027 dates are tentative until confirmed at the preceding meeting."
+    meetings:
+      # 2021–2025 used for event studies (decision day).
+      - {date: "2021-01-27"}
+      - {date: "2021-03-17", sep: true}
+      - {date: "2021-04-28"}
+      - {date: "2021-06-16", sep: true}
+      - {date: "2021-07-28"}
+      - {date: "2021-09-22", sep: true}
+      - {date: "2021-11-03"}
+      - {date: "2021-12-15", sep: true}
+      - {date: "2022-01-26"}
+      - {date: "2022-03-16", sep: true}
+      - {date: "2022-05-04"}
+      - {date: "2022-06-15", sep: true}
+      - {date: "2022-07-27"}
+      - {date: "2022-09-21", sep: true}
+      - {date: "2022-11-02"}
+      - {date: "2022-12-14", sep: true}
+      - {date: "2023-02-01"}
+      - {date: "2023-03-22", sep: true}
+      - {date: "2023-05-03"}
+      - {date: "2023-06-14", sep: true}
+      - {date: "2023-07-26"}
+      - {date: "2023-09-20", sep: true}
+      - {date: "2023-11-01"}
+      - {date: "2023-12-13", sep: true}
+      - {date: "2024-01-31"}
+      - {date: "2024-03-20", sep: true}
+      - {date: "2024-05-01"}
+      - {date: "2024-06-12", sep: true}
+      - {date: "2024-07-31"}
+      - {date: "2024-09-18", sep: true}
+      - {date: "2024-11-07"}
+      - {date: "2024-12-18", sep: true}
+      - {date: "2025-01-29"}
+      - {date: "2025-03-19", sep: true}
+      - {date: "2025-05-07"}
+      - {date: "2025-06-18", sep: true}
+      - {date: "2025-07-30"}
+      - {date: "2025-09-17", sep: true}
+      - {date: "2025-10-29"}
+      - {date: "2025-12-10", sep: true}
+      - {date: "2026-01-28"}
+      - {date: "2026-03-18", sep: true}
+      - {date: "2026-04-29"}
+      - {date: "2026-06-17", sep: true}
+      - {date: "2026-07-29"}
+      - {date: "2026-09-16", sep: true}
+      - {date: "2026-10-28"}
+      - {date: "2026-12-09", sep: true}
+      - {date: "2027-01-27", tentative: true}
+      - {date: "2027-03-17", sep: true, tentative: true}
+      - {date: "2027-04-28", tentative: true}
+      - {date: "2027-06-09", sep: true, tentative: true}
+      - {date: "2027-07-28", tentative: true}
+      - {date: "2027-09-15", sep: true, tentative: true}
+      - {date: "2027-10-27", tentative: true}
+      - {date: "2027-12-08", sep: true, tentative: true}
+  ECB:
+    name: "ECB – Governing Council (monetary policy)"
+    source: "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+    note: "Official page lists meetings from October 2026 onward. Date shown = press-conference day."
+    meetings:
+      - {date: "2026-10-29"}
+      - {date: "2026-12-17"}
+      - {date: "2027-02-04"}
+      - {date: "2027-03-18"}
+      - {date: "2027-04-29"}
+      - {date: "2027-06-10"}
+      - {date: "2027-07-22"}
+      - {date: "2027-09-09"}
+      - {date: "2027-10-28"}
+      - {date: "2027-12-16"}
+  BoE:
+    name: "Bank of England – MPC"
+    source: "https://www.bankofengland.co.uk/monetary-policy/upcoming-mpc-dates"
+    meetings:
+      - {date: "2026-02-05"}
+      - {date: "2026-03-19"}
+      - {date: "2026-04-30"}
+      - {date: "2026-06-18"}
+      - {date: "2026-07-30"}
+      - {date: "2026-09-17"}
+      - {date: "2026-11-05"}
+      - {date: "2026-12-17"}
+      - {date: "2027-02-04"}
+      - {date: "2027-03-18"}
+      - {date: "2027-04-29"}
+      - {date: "2027-06-17"}
+      - {date: "2027-07-29"}
+      - {date: "2027-09-16"}
+      - {date: "2027-11-04"}
+      - {date: "2027-12-16"}
+  BoJ:
+    name: "Bank of Japan – Monetary Policy Meeting"
+    source: "https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm"
+    meetings:
+      - {date: "2026-01-23"}
+      - {date: "2026-03-19"}
+      - {date: "2026-04-28"}
+      - {date: "2026-06-16"}
+      - {date: "2026-07-31"}
+      - {date: "2026-09-18"}
+      - {date: "2026-10-30"}
+      - {date: "2026-12-18"}
+      - {date: "2027-01-22"}
+      - {date: "2027-03-18"}
+      - {date: "2027-04-28"}
+      - {date: "2027-06-11"}
+      - {date: "2027-07-22"}
+      - {date: "2027-09-22"}
+      - {date: "2027-10-29"}
+      - {date: "2027-12-17"}
+  BoC:
+    name: "Bank of Canada – interest rate announcements"
+    source: "https://www.bankofcanada.ca/press/upcoming-events/"
+    note: "Only the remaining 2026 dates were listed on the official page on 2026-10-10."
+    meetings:
+      - {date: "2026-10-28", mpr: true}
+      - {date: "2026-12-09"}

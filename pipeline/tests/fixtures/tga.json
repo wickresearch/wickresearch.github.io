@@ -1,0 +1,6 @@
+{"data":[{"record_date":"2026-10-08","account_type":"Treasury General Account (TGA) Opening Balance","open_today_bal":"885783","close_today_bal":"null"},
+{"record_date":"2026-10-08","account_type":"Total TGA Deposits (Table II)","open_today_bal":"301352","close_today_bal":"null"},
+{"record_date":"2026-10-08","account_type":"Total TGA Withdrawals (Table II)","open_today_bal":"299666","close_today_bal":"null"},
+{"record_date":"2020-01-02","account_type":"Federal Reserve Account","open_today_bal":"1","close_today_bal":"2"},
+{"record_date":"2021-01-04","account_type":"Treasury General Account (TGA) Closing Balance","open_today_bal":"null","close_today_bal":"1700000"}],
+"meta":{"total-pages":1}}

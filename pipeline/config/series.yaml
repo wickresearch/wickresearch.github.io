@@ -1,0 +1,414 @@
+# Wick Research series catalogue
+# ------------------------------------------------------------------------------------------
+# One entry per series the site publishes. To add a series: copy an entry, change the fields,
+# run `python -m pipeline.run --only <ID>` and check data/catalog.json. No code changes needed.
+#
+# Fields
+#   id        Site-wide identifier (UPPER_SNAKE). Used in URLs and file names.
+#   name      Display name.
+#   group     Terminal module grouping (see site/assets/js/modules/*).
+#   provider  fred | nyfed | coinbase | bis   (curves are configured separately below)
+#   key       Provider series code. nyfed: "<RATE>:<field>" e.g. "SOFR:p99".
+#   units     Display units AFTER `scale` is applied.
+#   scale     Multiply provider values (e.g. 0.001 converts USD millions to USD billions).
+#   freq      D, W, M, Q (native frequency).
+#   change    How changes are expressed: bp (yields/rates), pct (prices/indices), abs (levels).
+#   type      Data class shown in the UI. One of:
+#               administered | overnight_market | treasury_yield | market_close | official_release
+#               | model_estimate | survey | proxy | derived
+#   check     Verification evidence (docs/DATA_SOURCES.md):
+#               tested     = representative call made on 2026-10-10
+#               production = returned data in the existing GitHub Actions pipeline (raw.json, 2026-10-09)
+#               family     = same endpoint/series family as a tested call; confirmed at first pipeline run
+#   start     Earliest date to request (keeps files small).
+#   fallback  Optional {provider, key} used if the primary provider fails.
+#   owner     Copyright owner for third-party data shown via FRED (displayed with the series).
+# ------------------------------------------------------------------------------------------
+
+series:
+  # ---------------- US rates: Treasury yields (constant maturity, H.15) ----------------
+  - {id: UST3M, name: "US 3M Treasury", group: rates_us, provider: fred, key: DGS3MO, units: "%", freq: D, change: bp, type: treasury_yield, check: family, start: "1990-01-01"}
+  - {id: UST2Y, name: "US 2Y Treasury", group: rates_us, provider: fred, key: DGS2, units: "%", freq: D, change: bp, type: treasury_yield, check: production, start: "1990-01-01"}
+  - {id: UST5Y, name: "US 5Y Treasury", group: rates_us, provider: fred, key: DGS5, units: "%", freq: D, change: bp, type: treasury_yield, check: production, start: "1990-01-01"}
+  - {id: UST10Y, name: "US 10Y Treasury", group: rates_us, provider: fred, key: DGS10, units: "%", freq: D, change: bp, type: treasury_yield, check: tested, start: "1990-01-01"}
+  - {id: UST30Y, name: "US 30Y Treasury", group: rates_us, provider: fred, key: DGS30, units: "%", freq: D, change: bp, type: treasury_yield, check: production, start: "1990-01-01"}
+  - {id: TIPS5Y, name: "US 5Y TIPS real yield", group: rates_us, provider: fred, key: DFII5, units: "%", freq: D, change: bp, type: treasury_yield, check: family, start: "2003-01-01"}
+  - {id: TIPS10Y, name: "US 10Y TIPS real yield", group: rates_us, provider: fred, key: DFII10, units: "%", freq: D, change: bp, type: treasury_yield, check: production, start: "2003-01-01"}
+  - {id: BE5Y, name: "US 5Y breakeven inflation", group: rates_us, provider: fred, key: T5YIE, units: "%", freq: D, change: bp, type: derived, check: family, start: "2003-01-01"}
+  - {id: BE10Y, name: "US 10Y breakeven inflation", group: rates_us, provider: fred, key: T10YIE, units: "%", freq: D, change: bp, type: derived, check: family, start: "2003-01-01"}
+  - {id: BE5Y5Y, name: "US 5y5y forward inflation expectation", group: rates_us, provider: fred, key: T5YIFR, units: "%", freq: D, change: bp, type: derived, check: tested, start: "2003-01-01"}
+  - {id: TP10Y, name: "US 10Y term premium (Kim–Wright)", group: rates_us, provider: fred, key: THREEFYTP10, units: "%", freq: D, change: bp, type: model_estimate, check: production, start: "1990-01-01"}
+
+  # ---------------- US front end: administered vs market overnight rates ----------------
+  - {id: FF_UPPER, name: "Fed funds target range – upper", group: frontend, provider: fred, key: DFEDTARU, units: "%", freq: D, change: bp, type: administered, check: family, start: "2008-12-16"}
+  - {id: FF_LOWER, name: "Fed funds target range – lower", group: frontend, provider: fred, key: DFEDTARL, units: "%", freq: D, change: bp, type: administered, check: family, start: "2008-12-16"}
+  - {id: IORB, name: "Interest on reserve balances (IORB)", group: frontend, provider: fred, key: IORB, units: "%", freq: D, change: bp, type: administered, check: tested, start: "2021-07-29"}
+  - {id: ONRRP_RATE, name: "ON RRP award rate", group: frontend, provider: fred, key: RRPONTSYAWARD, units: "%", freq: D, change: bp, type: administered, check: family, start: "2013-09-23"}
+  - {id: EFFR, name: "Effective fed funds rate (EFFR)", group: frontend, provider: nyfed, key: "EFFR:rate", units: "%", freq: D, change: bp, type: overnight_market, check: tested, start: "2016-03-01", fallback: {provider: fred, key: EFFR}}
+  - {id: SOFR, name: "SOFR", group: frontend, provider: nyfed, key: "SOFR:rate", units: "%", freq: D, change: bp, type: overnight_market, check: tested, start: "2018-04-02", fallback: {provider: fred, key: SOFR}}
+  - {id: SOFR_P99, name: "SOFR 99th percentile", group: frontend, provider: nyfed, key: "SOFR:p99", units: "%", freq: D, change: bp, type: overnight_market, check: tested, start: "2018-04-02"}
+  - {id: SOFR_P1, name: "SOFR 1st percentile", group: frontend, provider: nyfed, key: "SOFR:p1", units: "%", freq: D, change: bp, type: overnight_market, check: tested, start: "2018-04-02"}
+  - {id: SOFR_VOL, name: "SOFR volume", group: frontend, provider: nyfed, key: "SOFR:volume", units: "USD bn", freq: D, change: abs, type: overnight_market, check: tested, start: "2018-04-02"}
+  - {id: TGCR, name: "Tri-party general collateral rate (TGCR)", group: frontend, provider: nyfed, key: "TGCR:rate", units: "%", freq: D, change: bp, type: overnight_market, check: tested, start: "2018-04-02"}
+  - {id: OBFR, name: "Overnight bank funding rate (OBFR)", group: frontend, provider: nyfed, key: "OBFR:rate", units: "%", freq: D, change: bp, type: overnight_market, check: tested, start: "2016-03-01"}
+  - {id: SEP_FF_MEDIAN, name: "FOMC SEP median fed funds (year-end)", group: frontend, provider: fred, key: FEDTARMD, units: "%", freq: A, change: bp, type: official_release, check: tested, start: "2015-01-01", allow_future_days: 2200}
+
+  # ---------------- US liquidity (H.4.1, Treasury) ----------------
+  - {id: FED_ASSETS, name: "Fed total assets", group: liquidity, provider: fred, key: WALCL, units: "USD bn", scale: 0.001, freq: W, change: abs, type: official_release, check: production, start: "2002-12-18"}
+  - {id: FED_UST, name: "Fed Treasury holdings (outright)", group: liquidity, provider: fred, key: TREAST, units: "USD bn", scale: 0.001, freq: W, change: abs, type: official_release, check: tested, start: "2002-12-18"}
+  - {id: FED_MBS, name: "Fed MBS holdings", group: liquidity, provider: fred, key: WSHOMCB, units: "USD bn", scale: 0.001, freq: W, change: abs, type: official_release, check: tested, start: "2002-12-18"}
+  - {id: RESERVES, name: "Reserve balances (week avg)", group: liquidity, provider: fred, key: WRESBAL, units: "USD bn", scale: 0.001, freq: W, change: abs, type: official_release, check: tested, start: "2002-12-18"}
+  - {id: TGA_W, name: "Treasury General Account (Wed level)", group: liquidity, provider: fred, key: WTREGEN, units: "USD bn", scale: 0.001, freq: W, change: abs, type: official_release, check: production, start: "2002-12-18"}
+  - {id: ONRRP, name: "ON RRP take-up", group: liquidity, provider: fred, key: RRPONTSYD, units: "USD bn", freq: D, change: abs, type: official_release, check: production, start: "2013-09-23"}
+  - {id: M2, name: "M2 money stock", group: liquidity, provider: fred, key: M2SL, units: "USD bn", freq: M, change: pct, type: official_release, check: family, start: "1980-01-01"}
+  - {id: NFCI, name: "Chicago Fed NFCI", group: liquidity, provider: fred, key: NFCI, units: "index", freq: W, change: abs, type: model_estimate, check: tested, start: "1990-01-01"}
+  - {id: STLFSI, name: "St. Louis Fed Financial Stress Index", group: liquidity, provider: fred, key: STLFSI4, units: "index", freq: W, change: abs, type: model_estimate, check: tested, start: "1994-01-01"}
+  - {id: HY_OAS, name: "US high-yield OAS (ICE BofA)", group: liquidity, provider: fred, key: BAMLH0A0HYM2, units: "%", freq: D, change: bp, type: market_close, check: tested, owner: "ICE Data Indices, LLC (FRED shows ~3 years)", start: "1997-01-01"}
+  - {id: IG_OAS, name: "US investment-grade OAS (ICE BofA)", group: liquidity, provider: fred, key: BAMLC0A0CM, units: "%", freq: D, change: bp, type: market_close, check: family, owner: "ICE Data Indices, LLC (FRED shows ~3 years)", start: "1997-01-01"}
+
+  # ---------------- US inflation ----------------
+  - {id: CPI, name: "CPI-U all items (SA)", group: inflation, provider: fred, key: CPIAUCSL, units: "index", freq: M, change: pct, type: official_release, check: production, start: "1960-01-01"}
+  - {id: CORE_CPI, name: "Core CPI (SA)", group: inflation, provider: fred, key: CPILFESL, units: "index", freq: M, change: pct, type: official_release, check: production, start: "1960-01-01"}
+  - {id: CPI_SERVICES, name: "CPI services (SA)", group: inflation, provider: fred, key: CUSR0000SAS, units: "index", freq: M, change: pct, type: official_release, check: production, start: "1960-01-01"}
+  - {id: CPI_SHELTER, name: "CPI shelter (SA)", group: inflation, provider: fred, key: CUSR0000SAH1, units: "index", freq: M, change: pct, type: official_release, check: family, start: "1960-01-01"}
+  - {id: PCE, name: "PCE price index", group: inflation, provider: fred, key: PCEPI, units: "index", freq: M, change: pct, type: official_release, check: production, start: "1960-01-01"}
+  - {id: CORE_PCE, name: "Core PCE price index", group: inflation, provider: fred, key: PCEPILFE, units: "index", freq: M, change: pct, type: official_release, check: production, start: "1960-01-01"}
+  - {id: PPI, name: "PPI final demand", group: inflation, provider: fred, key: PPIFIS, units: "index", freq: M, change: pct, type: official_release, check: family, start: "2010-01-01"}
+  - {id: EA_HICP, name: "Euro area HICP (changing composition)", group: inflation, provider: fred, key: CP0000EZCCM086NEST, units: "index", freq: M, change: pct, type: official_release, check: tested, start: "1997-01-01"}
+
+  # ---------------- US labour ----------------
+  - {id: PAYROLLS, name: "Nonfarm payrolls", group: labour, provider: fred, key: PAYEMS, units: "thousands", freq: M, change: abs, type: official_release, check: production, start: "1960-01-01"}
+  - {id: UNRATE, name: "Unemployment rate", group: labour, provider: fred, key: UNRATE, units: "%", freq: M, change: abs, type: official_release, check: production, start: "1960-01-01"}
+  - {id: AHE, name: "Average hourly earnings, total private", group: labour, provider: fred, key: CES0500000003, units: "USD", freq: M, change: pct, type: official_release, check: tested, start: "2006-03-01"}
+  - {id: PARTICIPATION, name: "Labour-force participation rate", group: labour, provider: fred, key: CIVPART, units: "%", freq: M, change: abs, type: official_release, check: production, start: "1960-01-01"}
+  - {id: CLAIMS, name: "Initial jobless claims", group: labour, provider: fred, key: ICSA, units: "thousands", scale: 0.001, freq: W, change: abs, type: official_release, check: production, start: "1967-01-01"}
+  - {id: CONT_CLAIMS, name: "Continuing claims", group: labour, provider: fred, key: CCSA, units: "thousands", scale: 0.001, freq: W, change: abs, type: official_release, check: production, start: "1967-01-01"}
+  - {id: JOLTS_OPENINGS, name: "JOLTS job openings", group: labour, provider: fred, key: JTSJOL, units: "thousands", freq: M, change: abs, type: official_release, check: production, start: "2000-12-01"}
+  - {id: JOLTS_QUITS, name: "JOLTS quits rate", group: labour, provider: fred, key: JTSQUR, units: "%", freq: M, change: abs, type: official_release, check: production, start: "2000-12-01"}
+
+  # ---------------- US activity ----------------
+  - {id: INDPRO, name: "Industrial production", group: activity, provider: fred, key: INDPRO, units: "index", freq: M, change: pct, type: official_release, check: production, start: "1960-01-01"}
+  - {id: RETAIL, name: "Retail sales ex food services", group: activity, provider: fred, key: RSXFS, units: "USD mn", freq: M, change: pct, type: official_release, check: production, start: "1992-01-01"}
+  - {id: HOUSING_STARTS, name: "Housing starts", group: activity, provider: fred, key: HOUST, units: "thousands, SAAR", freq: M, change: pct, type: official_release, check: production, start: "1960-01-01"}
+  - {id: PERMITS, name: "Building permits", group: activity, provider: fred, key: PERMIT, units: "thousands, SAAR", freq: M, change: pct, type: official_release, check: family, start: "1960-01-01"}
+  - {id: UMICH, name: "UMich consumer sentiment", group: activity, provider: fred, key: UMCSENT, units: "index", freq: M, change: abs, type: survey, check: production, start: "1978-01-01"}
+  - {id: PHILLY_FED, name: "Philadelphia Fed manufacturing: general activity", group: activity, provider: fred, key: GACDFSA066MSFRBPHI, units: "diffusion index", freq: M, change: abs, type: survey, check: tested, start: "1968-05-01"}
+  - {id: MORTGAGE30, name: "30Y fixed mortgage rate (Freddie Mac)", group: activity, provider: fred, key: MORTGAGE30US, units: "%", freq: W, change: bp, type: survey, check: production, start: "1971-04-02"}
+  - {id: REAL_GDP, name: "Real GDP", group: activity, provider: fred, key: GDPC1, units: "USD bn (2017), SAAR", freq: Q, change: pct, type: official_release, check: family, start: "1960-01-01"}
+  - {id: GDPNOW, name: "Atlanta Fed GDPNow (current quarter)", group: activity, provider: fred, key: GDPNOW, units: "% q/q SAAR", freq: Q, change: abs, type: model_estimate, check: tested, start: "2014-01-01"}
+  - {id: USREC, name: "NBER recession indicator", group: activity, provider: fred, key: USREC, units: "0/1", freq: M, change: abs, type: official_release, check: family, start: "1960-01-01"}
+
+  # ---------------- Markets (end-of-day) ----------------
+  - {id: SPX, name: "S&P 500", group: equities, provider: fred, key: SP500, units: "index", freq: D, change: pct, type: market_close, check: tested, owner: "S&P Dow Jones Indices LLC (FRED shows 10 years)", start: "2016-01-01"}
+  - {id: NASDAQ, name: "Nasdaq Composite", group: equities, provider: fred, key: NASDAQCOM, units: "index", freq: D, change: pct, type: market_close, check: production, owner: "Nasdaq OMX Group", start: "2000-01-01"}
+  - {id: DJIA, name: "Dow Jones Industrial Average", group: equities, provider: fred, key: DJIA, units: "index", freq: D, change: pct, type: market_close, check: tested, owner: "S&P Dow Jones Indices LLC (FRED shows 10 years)", start: "2016-01-01"}
+  - {id: NIKKEI, name: "Nikkei 225", group: equities, provider: fred, key: NIKKEI225, units: "index", freq: D, change: pct, type: market_close, check: production, owner: "Nikkei Inc.", start: "2000-01-01"}
+  - {id: VIX, name: "CBOE VIX", group: volatility, provider: fred, key: VIXCLS, units: "index", freq: D, change: abs, type: market_close, check: production, owner: "Chicago Board Options Exchange", start: "2000-01-01"}
+  - {id: GVZ, name: "CBOE Gold ETF volatility (GVZ)", group: volatility, provider: fred, key: GVZCLS, units: "index", freq: D, change: abs, type: market_close, check: tested, owner: "Chicago Board Options Exchange", start: "2008-06-03"}
+  - {id: OVX, name: "CBOE Crude Oil ETF volatility (OVX)", group: volatility, provider: fred, key: OVXCLS, units: "index", freq: D, change: abs, type: market_close, check: family, owner: "Chicago Board Options Exchange", start: "2007-05-10"}
+  - {id: USD_BROAD, name: "Nominal broad US dollar index (Fed)", group: fx, provider: fred, key: DTWEXBGS, units: "index", freq: D, change: pct, type: official_release, check: production, start: "2006-01-02"}
+  - {id: EURUSD, name: "EUR/USD", group: fx, provider: fred, key: DEXUSEU, units: "USD per EUR", freq: D, change: pct, type: official_release, check: production, start: "1999-01-04"}
+  - {id: GBPUSD, name: "GBP/USD", group: fx, provider: fred, key: DEXUSUK, units: "USD per GBP", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
+  - {id: USDJPY, name: "USD/JPY", group: fx, provider: fred, key: DEXJPUS, units: "JPY per USD", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
+  - {id: USDCHF, name: "USD/CHF", group: fx, provider: fred, key: DEXSZUS, units: "CHF per USD", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
+  - {id: USDCAD, name: "USD/CAD", group: fx, provider: fred, key: DEXCAUS, units: "CAD per USD", freq: D, change: pct, type: official_release, check: family, start: "1990-01-02"}
+  - {id: USDCNY, name: "USD/CNY", group: fx, provider: fred, key: DEXCHUS, units: "CNY per USD", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
+  - {id: WTI, name: "WTI crude (Cushing spot)", group: commodities, provider: fred, key: DCOILWTICO, units: "USD/bbl", freq: D, change: pct, type: market_close, check: production, start: "1990-01-02"}
+  - {id: BRENT, name: "Brent crude (Europe spot)", group: commodities, provider: fred, key: DCOILBRENTEU, units: "USD/bbl", freq: D, change: pct, type: market_close, check: production, start: "1990-01-02"}
+  - {id: HENRY_HUB, name: "Henry Hub natural gas spot", group: commodities, provider: fred, key: DHHNGSP, units: "USD/MMBtu", freq: D, change: pct, type: market_close, check: production, start: "1997-01-07"}
+  - {id: COPPER, name: "Copper (IMF, monthly avg)", group: commodities, provider: fred, key: PCOPPUSDM, units: "USD/t", freq: M, change: pct, type: official_release, check: production, start: "1990-01-01"}
+  - {id: GOLD_PROXY, name: "Gold proxy: PAX Gold (PAXG-USD)", group: commodities, provider: coinbase, key: PAXG-USD, units: "USD/oz-token", freq: D, change: pct, type: proxy, check: tested, start: "2021-01-01"}
+  - {id: BTC, name: "Bitcoin (BTC-USD)", group: crypto, provider: coinbase, key: BTC-USD, units: "USD", freq: D, change: pct, type: market_close, check: tested, start: "2015-07-21", fallback: {provider: fred, key: CBBTCUSD}}
+  - {id: ETH, name: "Ether (ETH-USD)", group: crypto, provider: coinbase, key: ETH-USD, units: "USD", freq: D, change: pct, type: market_close, check: family, start: "2016-05-19", fallback: {provider: fred, key: CBETHUSD}}
+
+  # ---------------- Global sovereign 10Y (monthly averages, OECD via FRED) – long-history comparisons ----------------
+  - {id: DE10Y_M, name: "Germany 10Y (monthly avg)", group: global_m, provider: fred, key: IRLTLT01DEM156N, units: "%", freq: M, change: bp, type: official_release, check: production, start: "1990-01-01"}
+  - {id: FR10Y_M, name: "France 10Y (monthly avg)", group: global_m, provider: fred, key: IRLTLT01FRM156N, units: "%", freq: M, change: bp, type: official_release, check: production, start: "1990-01-01"}
+  - {id: IT10Y_M, name: "Italy 10Y (monthly avg)", group: global_m, provider: fred, key: IRLTLT01ITM156N, units: "%", freq: M, change: bp, type: official_release, check: production, start: "1990-01-01"}
+  - {id: ES10Y_M, name: "Spain 10Y (monthly avg)", group: global_m, provider: fred, key: IRLTLT01ESM156N, units: "%", freq: M, change: bp, type: official_release, check: production, start: "1990-01-01"}
+  - {id: UK10Y_M, name: "UK 10Y (monthly avg)", group: global_m, provider: fred, key: IRLTLT01GBM156N, units: "%", freq: M, change: bp, type: official_release, check: production, start: "1990-01-01"}
+  - {id: JP10Y_M, name: "Japan 10Y (monthly avg)", group: global_m, provider: fred, key: IRLTLT01JPM156N, units: "%", freq: M, change: bp, type: official_release, check: production, start: "1990-01-01"}
+  - {id: CH10Y_M, name: "Switzerland 10Y (monthly avg)", group: global_m, provider: fred, key: IRLTLT01CHM156N, units: "%", freq: M, change: bp, type: official_release, check: production, start: "1990-01-01"}
+
+# Central-bank policy rates from BIS (stored as step series: one point per change + latest date).
+policy_rates:
+  provider: bis
+  check: tested
+  start: "1990-01-01"
+  areas:
+    US: {name: "Federal Reserve (target range midpoint)", bank: Fed}
+    XM: {name: "ECB deposit facility rate", bank: ECB}
+    GB: {name: "Bank of England Bank Rate", bank: BoE}
+    JP: {name: "Bank of Japan policy rate", bank: BoJ}
+    CA: {name: "Bank of Canada overnight target", bank: BoC}
+    CH: {name: "Swiss National Bank policy rate", bank: SNB}
+    AU: {name: "Reserve Bank of Australia cash rate", bank: RBA}
+
+# Sovereign curves (matrix files: data/curves/<id>.json). Tenor columns are also exposed as
+# virtual series "<ID>_<TENOR>" (e.g. US_10Y) in the catalogue.
+curves:
+  - {id: US, name: "US Treasury par curve", provider: treasury, check: tested, start_year: 2000, type: treasury_yield}
+  - {id: DE, name: "German Bund curve (Svensson zero)", provider: bundesbank, check: tested, start: "2000-01-01", type: treasury_yield}
+  - {id: UK, name: "UK gilt nominal par curve (BoE)", provider: boe, check: partial, start: "2000-01-01", type: treasury_yield}
+  - {id: JP, name: "JGB curve (MoF)", provider: mof, check: partial, type: treasury_yield}
+  - {id: CA, name: "Government of Canada benchmark yields", provider: boc, check: tested, start: "2001-01-01", type: treasury_yield}
+
+# Derived series (computed in pipeline/derive.py from the series above; formulas shown in the UI).
+derived:
+  - {id: US2S10S, name: "UST 2s10s", op: spread, a: UST10Y, b: UST2Y, scale: 100, units: bp, change: abs, formula: "(10Y − 2Y) × 100"}
+  - {id: US5S30S, name: "UST 5s30s", op: spread, a: UST30Y, b: UST5Y, scale: 100, units: bp, change: abs, formula: "(30Y − 5Y) × 100"}
+  - {id: US3M10Y, name: "UST 3m10y", op: spread, a: UST10Y, b: UST3M, scale: 100, units: bp, change: abs, formula: "(10Y − 3M) × 100"}
+  - {id: US2Y_EFFR, name: "UST 2Y − EFFR", op: spread, a: UST2Y, b: EFFR, scale: 100, units: bp, change: abs, formula: "(2Y yield − EFFR) × 100. Rough gauge of easing (<0) / tightening (>0) priced over 2 years; includes term premium."}
+  - {id: SOFR_IORB, name: "SOFR − IORB", op: spread, a: SOFR, b: IORB, scale: 100, units: bp, change: abs, formula: "(SOFR − IORB) × 100"}
+  - {id: SOFR99_IORB, name: "SOFR 99th pct − IORB", op: spread, a: SOFR_P99, b: IORB, scale: 100, units: bp, change: abs, formula: "(SOFR 99th percentile − IORB) × 100. Tail funding pressure."}
+  - {id: EFFR_IORB, name: "EFFR − IORB", op: spread, a: EFFR, b: IORB, scale: 100, units: bp, change: abs, formula: "(EFFR − IORB) × 100"}
+  - {id: TGCR_RRP, name: "TGCR − ON RRP rate", op: spread, a: TGCR, b: ONRRP_RATE, scale: 100, units: bp, change: abs, formula: "(TGCR − ON RRP award rate) × 100"}
+  - {id: NET_LIQ, name: "Net liquidity proxy", op: net_liquidity, units: "USD bn", change: abs, formula: "Fed total assets (WALCL) − TGA (WTREGEN) − ON RRP (RRPONTSYD), Wednesday levels, USD bn. A widely used proxy, not an official measure."}
+  - {id: UST10Y_RVOL, name: "UST 10Y realised vol (21d)", op: realised_vol_bp, a: UST10Y, window: 21, units: "bp/yr", change: abs, formula: "stdev(daily Δ10Y, 21 obs) × √252, in bp. Substitute for MOVE (not available)."}
+  - {id: CPI_YOY, name: "CPI y/y", op: yoy, a: CPI, units: "%", change: abs, formula: "CPI_t / CPI_{t−12} − 1"}
+  - {id: CORE_CPI_YOY, name: "Core CPI y/y", op: yoy, a: CORE_CPI, units: "%", change: abs, formula: "Core CPI_t / Core CPI_{t−12} − 1"}
+  - {id: CORE_CPI_3M, name: "Core CPI 3m annualised", op: ann3m, a: CORE_CPI, units: "%", change: abs, formula: "(Core CPI_t / Core CPI_{t−3})^4 − 1"}
+  - {id: CORE_CPI_MOM, name: "Core CPI m/m", op: mom, a: CORE_CPI, units: "%", change: abs, formula: "Core CPI_t / Core CPI_{t−1} − 1"}
+  - {id: CPI_SERVICES_YOY, name: "CPI services y/y", op: yoy, a: CPI_SERVICES, units: "%", change: abs, formula: "y/y % change"}
+  - {id: CPI_SHELTER_YOY, name: "CPI shelter y/y", op: yoy, a: CPI_SHELTER, units: "%", change: abs, formula: "y/y % change"}
+  - {id: PCE_YOY, name: "PCE y/y", op: yoy, a: PCE, units: "%", change: abs, formula: "y/y % change"}
+  - {id: CORE_PCE_YOY, name: "Core PCE y/y", op: yoy, a: CORE_PCE, units: "%", change: abs, formula: "y/y % change"}
+  - {id: CORE_PCE_3M, name: "Core PCE 3m annualised", op: ann3m, a: CORE_PCE, units: "%", change: abs, formula: "(P_t / P_{t−3})^4 − 1"}
+  - {id: PPI_YOY, name: "PPI final demand y/y", op: yoy, a: PPI, units: "%", change: abs, formula: "y/y % change"}
+  - {id: EA_HICP_YOY, name: "Euro area HICP y/y", op: yoy, a: EA_HICP, units: "%", change: abs, formula: "y/y % change"}
+  - {id: PAYROLLS_CHG, name: "Payrolls m/m change", op: diff, a: PAYROLLS, units: "thousands", change: abs, formula: "PAYEMS_t − PAYEMS_{t−1}"}
+  - {id: PAYROLLS_3MAVG, name: "Payrolls 3m avg change", op: diff_avg3, a: PAYROLLS, units: "thousands", change: abs, formula: "mean of last 3 monthly changes"}
+  - {id: AHE_YOY, name: "Average hourly earnings y/y", op: yoy, a: AHE, units: "%", change: abs, formula: "y/y % change"}
+  - {id: INDPRO_YOY, name: "Industrial production y/y", op: yoy, a: INDPRO, units: "%", change: abs, formula: "y/y % change"}
+  - {id: RETAIL_YOY, name: "Retail sales y/y", op: yoy, a: RETAIL, units: "%", change: abs, formula: "y/y % change"}
+  - {id: REAL_GDP_QQ, name: "Real GDP q/q annualised", op: ann1q, a: REAL_GDP, units: "%", change: abs, formula: "(GDP_t / GDP_{t−1})^4 − 1"}
+  - {id: CLAIMS_4WK, name: "Initial claims 4-week avg", op: avg4, a: CLAIMS, units: "thousands", change: abs, formula: "mean of last 4 weekly prints"}
+  - {id: IT_DE_10Y_M, name: "Italy − Germany 10Y (monthly)", op: spread, a: IT10Y_M, b: DE10Y_M, scale: 100, units: bp, change: abs, formula: "(IT 10Y − DE 10Y) × 100"}
+  - {id: FR_DE_10Y_M, name: "France − Germany 10Y (monthly)", op: spread, a: FR10Y_M, b: DE10Y_M, scale: 100, units: bp, change: abs, formula: "(FR 10Y − DE 10Y) × 100"}
+  - {id: US_DE_10Y, name: "US − Germany 10Y", op: spread, a: US_10Y, b: DE_10Y, scale: 100, units: bp, change: abs, formula: "(UST 10Y par − Bund 10Y Svensson zero) × 100. Mixed curve conventions (par vs zero) – read changes, not level."}
+  - {id: US_UK_10Y, name: "US − UK 10Y", op: spread, a: US_10Y, b: UK_10Y, scale: 100, units: bp, change: abs, formula: "(UST 10Y − gilt 10Y par) × 100"}
+  - {id: US_JP_10Y, name: "US − Japan 10Y", op: spread, a: US_10Y, b: JP_10Y, scale: 100, units: bp, change: abs, formula: "(UST 10Y − JGB 10Y) × 100"}
+  - {id: US_CA_10Y, name: "US − Canada 10Y", op: spread, a: US_10Y, b: CA_10Y, scale: 100, units: bp, change: abs, formula: "(UST 10Y − GoC 10Y) × 100"}
+  - {id: DE2S10S, name: "Bund 2s10s", op: spread, a: DE_10Y, b: DE_2Y, scale: 100, units: bp, change: abs, formula: "(10Y − 2Y) × 100"}
+
+# ------------------------------------------------------------------------------------------
+# FRED library: the broad FRED watchlist, browsable in the terminal's "FRED library" module.
+# Add a series by appending its FRED ID to a group – name, units and frequency are read from
+# FRED's metadata automatically. Use a mapping ({key: ID, name: ..., units: ...}) to override.
+# IDs already configured above are referenced, not fetched twice.
+# check: tested = called successfully on 2026-10-10; production = returned data in the old pipeline;
+#        family (default) = FRED API verified, this ID confirmed at first pipeline run.
+# ------------------------------------------------------------------------------------------
+fred_library:
+  - group: "Fed funds & policy rates"
+    type: administered
+    series:
+      - {key: DFF, name: "Effective fed funds rate (daily, since 1954)", type: overnight_market, start: "1954-07-01"}
+      - {key: FEDFUNDS, name: "Effective fed funds rate (monthly avg)", type: overnight_market, start: "1954-07-01"}
+      - {key: DFEDTAR, name: "Fed funds target (single target, to Dec 2008)", check: tested, start: "1982-09-27"}
+      - DFEDTARU
+      - DFEDTARL
+      - IORB
+      - {key: IOER, name: "Interest on excess reserves (to Jul 2021)", start: "2008-10-09"}
+      - RRPONTSYAWARD
+      - {key: DPCREDIT, name: "Discount window primary credit rate", check: tested, start: "2003-01-09"}
+      - {key: DPRIME, name: "Bank prime loan rate", start: "1955-08-04"}
+      - {key: EFFR, type: overnight_market}
+      - {key: EFFRVOL, name: "EFFR volume", type: overnight_market}
+      - {key: OBFR, name: "Overnight bank funding rate (FRED)", type: overnight_market}
+      - {key: SOFR, type: overnight_market}
+      - {key: SOFR30DAYAVG, name: "SOFR 30-day average", type: overnight_market, check: tested}
+      - {key: SOFR90DAYAVG, name: "SOFR 90-day average", type: overnight_market}
+      - {key: SOFRINDEX, name: "SOFR index", type: overnight_market}
+  - group: "Treasury yields & curve"
+    type: treasury_yield
+    series:
+      - {key: DGS1MO, check: tested, start: "2001-07-31"}
+      - DGS3MO
+      - DGS6MO
+      - DGS1
+      - DGS2
+      - DGS3
+      - DGS5
+      - DGS7
+      - DGS10
+      - DGS20
+      - DGS30
+      - {key: DTB3, name: "3-month T-bill (secondary market, discount basis)", start: "1954-01-04"}
+      - {key: DTB6, name: "6-month T-bill (secondary market, discount basis)"}
+      - {key: T10Y2Y, name: "10Y − 2Y Treasury spread (FRED)", type: derived}
+      - {key: T10Y3M, name: "10Y − 3M Treasury spread (FRED)", type: derived}
+      - {key: T10YFF, name: "10Y Treasury − fed funds (FRED)", type: derived, check: tested}
+  - group: "Real yields, breakevens & inflation expectations"
+    type: treasury_yield
+    series:
+      - DFII5
+      - {key: DFII7}
+      - DFII10
+      - {key: DFII20}
+      - {key: DFII30}
+      - T5YIE
+      - T10YIE
+      - T5YIFR
+      - THREEFYTP10
+      - {key: MICH, name: "UMich 1-year inflation expectations", type: survey}
+      - {key: EXPINF1YR, name: "Cleveland Fed 1-year expected inflation", type: model_estimate}
+      - {key: EXPINF10YR, name: "Cleveland Fed 10-year expected inflation", type: model_estimate}
+  - group: "Fed balance sheet, reserves & liquidity"
+    type: official_release
+    series:
+      - WALCL
+      - TREAST
+      - WSHOMCB
+      - WRESBAL
+      - WTREGEN
+      - RRPONTSYD
+      - {key: WLRRAL, name: "Fed liabilities: reverse repos (incl. foreign official)", check: tested}
+      - {key: RPONTSYD, name: "Fed overnight repo operations (Treasury)"}
+      - {key: SWPT, name: "Central bank liquidity swaps"}
+      - M2SL
+      - {key: WM2NS, name: "M2 (weekly, NSA)"}
+      - {key: BOGMBASE, name: "Monetary base"}
+  - group: "Credit & financial conditions"
+    type: model_estimate
+    series:
+      - NFCI
+      - {key: ANFCI, name: "Chicago Fed adjusted NFCI"}
+      - STLFSI4
+      - BAMLH0A0HYM2
+      - BAMLC0A0CM
+      - {key: BAA10Y, name: "Moody's Baa − 10Y Treasury", type: market_close}
+      - {key: AAA10Y, name: "Moody's Aaa − 10Y Treasury", type: market_close}
+      - {key: DCPF3M, name: "3-month AA financial commercial paper", type: market_close}
+      - {key: DCPN3M, name: "3-month AA nonfinancial commercial paper", type: market_close}
+      - {key: DRTSCILM, name: "SLOOS: net % tightening C&I standards (large firms)", type: survey}
+      - {key: TOTCI, name: "Commercial & industrial loans, all banks"}
+  - group: "Inflation"
+    type: official_release
+    series:
+      - CPIAUCSL
+      - CPILFESL
+      - CUSR0000SAS
+      - CUSR0000SAH1
+      - {key: CUSR0000SEHA, name: "CPI rent of primary residence", check: production}
+      - {key: CPIENGSL, name: "CPI energy"}
+      - {key: CPIUFDSL, name: "CPI food"}
+      - PCEPI
+      - PCEPILFE
+      - PPIFIS
+      - {key: MEDCPIM158SFRBCLE, name: "Cleveland Fed median CPI (annualised m/m)", type: model_estimate, check: tested}
+      - {key: CORESTICKM159SFRBATL, name: "Atlanta Fed sticky-price core CPI y/y", type: model_estimate}
+      - {key: PCETRIM12M159SFRBDAL, name: "Dallas Fed trimmed-mean PCE (12m)", type: model_estimate}
+  - group: "Labour market"
+    type: official_release
+    series:
+      - PAYEMS
+      - {key: USPRIV, name: "Private nonfarm payrolls"}
+      - UNRATE
+      - {key: U6RATE, name: "U-6 underemployment rate"}
+      - CIVPART
+      - {key: LNS11300060, name: "Prime-age (25–54) participation rate"}
+      - {key: EMRATIO, name: "Employment–population ratio"}
+      - CES0500000003
+      - {key: ECIALLCIV, name: "Employment cost index, total comp."}
+      - {key: AWHAETP, name: "Average weekly hours, private"}
+      - ICSA
+      - CCSA
+      - JTSJOL
+      - JTSQUR
+      - {key: JTSHIR, name: "JOLTS hires rate"}
+  - group: "Growth, spending & housing"
+    type: official_release
+    series:
+      - GDPC1
+      - {key: A191RL1Q225SBEA, name: "Real GDP growth (q/q saar)"}
+      - GDPNOW
+      - {key: PCEC96, name: "Real personal consumption expenditures"}
+      - {key: DSPIC96, name: "Real disposable personal income"}
+      - {key: PSAVERT, name: "Personal saving rate"}
+      - {key: RSAFS, name: "Retail & food services sales"}
+      - RSXFS
+      - INDPRO
+      - {key: TCU, name: "Capacity utilisation", check: production}
+      - {key: DGORDER, name: "Durable goods orders"}
+      - {key: NEWORDER, name: "Core capital goods orders (nondefence ex aircraft)"}
+      - {key: TOTALSA, name: "Light vehicle sales (saar)"}
+      - {key: CFNAI, name: "Chicago Fed National Activity Index", type: model_estimate}
+      - {key: WEI, name: "NY Fed Weekly Economic Index", type: model_estimate}
+      - HOUST
+      - PERMIT
+      - {key: HSN1F, name: "New home sales", check: production}
+      - {key: EXHOSLUSM495S, name: "Existing home sales", check: production}
+      - {key: CSUSHPINSA, name: "Case-Shiller US national home price index", owner: "S&P Dow Jones Indices LLC"}
+      - MORTGAGE30US
+      - UMCSENT
+      - GACDFSA066MSFRBPHI
+      - {key: GACDINA066MSFRBNY, name: "Empire State manufacturing: general activity", type: survey}
+      - USREC
+  - group: "Fiscal"
+    type: official_release
+    series:
+      - {key: MTSDS133FMS, name: "Federal surplus/deficit (monthly, MTS)"}
+      - {key: FYFSD, name: "Federal surplus/deficit (fiscal year)"}
+      - {key: GFDEBTN, name: "Federal debt: total public debt"}
+      - {key: A091RC1Q027SBEA, name: "Federal interest payments (saar)"}
+  - group: "FOMC projections (SEP)"
+    type: official_release
+    series:
+      - FEDTARMD
+      - {key: FEDTARMDLR, name: "SEP median fed funds, longer run", check: tested}
+      - {key: PCECTPIMD, name: "SEP median core PCE inflation", check: tested, allow_future_days: 2200}
+      - {key: UNRATEMD, name: "SEP median unemployment rate", allow_future_days: 2200}
+      - {key: GDPC1MD, name: "SEP median real GDP growth", allow_future_days: 2200}
+  - group: "Markets: equities, volatility, FX, commodities, crypto"
+    type: market_close
+    series:
+      - SP500
+      - NASDAQCOM
+      - DJIA
+      - NIKKEI225
+      - VIXCLS
+      - {key: VXVCLS, name: "CBOE 3-month VIX", owner: "Chicago Board Options Exchange"}
+      - GVZCLS
+      - OVXCLS
+      - DTWEXBGS
+      - {key: DTWEXAFEGS, name: "USD vs advanced foreign economies (Fed)", type: official_release, check: tested}
+      - {key: DTWEXEMEGS, name: "USD vs emerging market economies (Fed)", type: official_release}
+      - DEXUSEU
+      - DEXUSUK
+      - DEXJPUS
+      - DEXSZUS
+      - DEXCAUS
+      - DEXCHUS
+      - {key: DEXINUS, name: "USD/INR", type: official_release}
+      - {key: DEXMXUS, name: "USD/MXN", type: official_release}
+      - {key: DEXKOUS, name: "USD/KRW", type: official_release}
+      - {key: DEXBZUS, name: "USD/BRL", type: official_release}
+      - {key: DEXUSAL, name: "AUD/USD", type: official_release}
+      - DCOILWTICO
+      - DCOILBRENTEU
+      - DHHNGSP
+      - {key: GASREGW, name: "US regular gasoline (weekly avg)"}
+      - PCOPPUSDM
+      - {key: PALUMUSDM, name: "Aluminium (IMF, monthly avg)", type: official_release}
+      - CBBTCUSD
+      - CBETHUSD
+  - group: "International (via FRED)"
+    type: official_release
+    series:
+      - ECBDFR
+      - {key: ECBMRRFR, name: "ECB main refinancing rate", type: administered}
+      - {key: ECBMLFR, name: "ECB marginal lending facility rate", type: administered}
+      - {key: ECBASSETSW, name: "ECB total assets", check: production}
+      - CP0000EZCCM086NEST
+      - IRLTLT01DEM156N
+      - IRLTLT01FRM156N
+      - IRLTLT01ITM156N
+      - IRLTLT01ESM156N
+      - IRLTLT01GBM156N
+      - IRLTLT01JPM156N
+      - IRLTLT01CHM156N
+      - {key: IRLTLT01CAM156N, name: "Canada 10Y (monthly avg)"}
+      - {key: IRLTLT01AUM156N, name: "Australia 10Y (monthly avg)"}
+      - {key: IR3TIB01EZM156N, name: "Euro area 3M interbank (monthly)"}
+      - {key: IR3TIB01GBM156N, name: "UK 3M interbank (monthly)"}

@@ -1,0 +1,41 @@
+# Provider registry. `status` mirrors docs/DATA_SOURCES.md (verified 2026-10-10).
+# A provider with enabled: false is never called by the pipeline.
+providers:
+  fred:       {name: "FRED, Federal Reserve Bank of St. Louis", url: "https://fred.stlouisfed.org/series/{key}", status: verified, enabled: true, needs_key: FRED_API_KEY}
+  nyfed:      {name: "Federal Reserve Bank of New York", url: "https://www.newyorkfed.org/markets/reference-rates", status: verified, enabled: true}
+  treasury:   {name: "U.S. Department of the Treasury", url: "https://home.treasury.gov/resource-center/data-chart-center/interest-rates", status: verified, enabled: true}
+  fiscaldata: {name: "U.S. Treasury FiscalData", url: "https://fiscaldata.treasury.gov/", status: verified, enabled: true}
+  bundesbank: {name: "Deutsche Bundesbank", url: "https://www.bundesbank.de/en/statistics/money-and-capital-markets/interest-rates-and-yields", status: verified, enabled: true}
+  boe:        {name: "Bank of England", url: "https://www.bankofengland.co.uk/boeapps/database/", status: partial, enabled: true, note: "CSV export format confirmed at first pipeline run"}
+  boc:        {name: "Bank of Canada", url: "https://www.bankofcanada.ca/rates/", status: verified, enabled: true}
+  mof:        {name: "Ministry of Finance, Japan", url: "https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/", status: partial, enabled: true, note: "history file not yet verified"}
+  bis:        {name: "Bank for International Settlements", url: "https://data.bis.org/topics/CBPOL", status: verified, enabled: true}
+  coinbase:   {name: "Coinbase Exchange", url: "https://exchange.coinbase.com/", status: verified, enabled: true}
+  medium:     {name: "Medium", url: "https://medium.com/@ishritt", status: verified, enabled: true, feed: "https://medium.com/feed/@ishritt"}
+  # Investigated and not used – kept here so the decision is visible in config.
+  ecb:        {name: "ECB Data Portal", status: not_verified, enabled: false, note: "robots-blocked in verification environment; Bundesbank/BIS/FRED used instead"}
+  eurostat:   {name: "Eurostat", status: not_verified, enabled: false, note: "prc_hicp_manr frozen at 2025-12"}
+  yahoo:      {name: "Yahoo Finance", status: not_used, enabled: false, note: "unofficial API; terms prohibit redistribution"}
+
+news_feeds:
+  - {source: "Federal Reserve", url: "https://www.federalreserve.gov/feeds/press_monetary.xml", bank: Fed}
+  - {source: "ECB", url: "https://www.ecb.europa.eu/rss/press.html", bank: ECB}
+  - {source: "Bank of England", url: "https://www.bankofengland.co.uk/rss/news", bank: BoE}
+  - {source: "Bank of Japan", url: "https://www.boj.or.jp/en/rss/whatsnew.xml", bank: BoJ}
+
+# Economic calendar: FRED release names to keep (substring match, case-insensitive) and display labels.
+calendar_releases:
+  - {match: "Consumer Price Index", label: "CPI", importance: high, event_study: cpi}
+  - {match: "Employment Situation", label: "Employment report (payrolls)", importance: high, event_study: nfp}
+  - {match: "Personal Income and Outlays", label: "PCE / personal income", importance: high}
+  - {match: "Gross Domestic Product", label: "GDP", importance: high}
+  - {match: "Producer Price Index", label: "PPI", importance: medium}
+  - {match: "Job Openings and Labor Turnover", label: "JOLTS", importance: medium}
+  - {match: "Unemployment Insurance Weekly Claims", label: "Jobless claims", importance: medium}
+  - {match: "Advance Monthly Sales for Retail", label: "Retail sales", importance: medium}
+  - {match: "Industrial Production and Capacity", label: "Industrial production", importance: medium}
+  - {match: "New Residential Construction", label: "Housing starts", importance: low}
+  - {match: "Surveys of Consumers", label: "UMich sentiment", importance: low}
+  - {match: "H.4.1 Factors Affecting Reserve Balances", label: "Fed H.4.1 balance sheet", importance: medium}
+  - {match: "Daily Treasury Statement", label: "Daily Treasury Statement", importance: low}
+  - {match: "Monthly Treasury Statement", label: "Monthly Treasury Statement", importance: low}

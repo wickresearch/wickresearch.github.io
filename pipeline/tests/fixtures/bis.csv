@@ -1,0 +1,6 @@
+FREQ:Frequency,REF_AREA:Reference area,TIME_PERIOD:Time period or range,OBS_VALUE:Observation Value,OBS_STATUS:Observation status
+D:Daily,GB:United Kingdom,2026-10-02,3.75,A:Normal value
+D:Daily,GB:United Kingdom,2026-10-05,3.75,A:Normal value
+D:Daily,JP:Japan,2026-09-23,1,A:Normal value
+D:Daily,JP:Japan,2026-09-24,1.25,A:Normal value
+D:Daily,US:United States,2026-10-06,3.875,A:Normal value
