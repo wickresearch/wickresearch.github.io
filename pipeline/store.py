@@ -52,6 +52,7 @@ class Previous:
     def __init__(self, base: str | None):
         self.base = (base or "").rstrip("/")
         self._cache: dict[str, Any] = {}
+        self.seconds, self.requests = 0.0, 0  # reported in status.json
 
     def get(self, rel: str) -> Any | None:
         if not self.base:
@@ -59,6 +60,9 @@ class Previous:
         if rel in self._cache:
             return self._cache[rel]
         val = None
+        import time
+        t0 = time.time()
+        self.requests += 1
         try:
             if self.base.startswith("http"):
                 r = requests.get(f"{self.base}/{rel}", timeout=20)
@@ -70,5 +74,6 @@ class Previous:
                     val = json.loads(p.read_text(encoding="utf-8"))
         except (requests.RequestException, ValueError, OSError) as exc:
             log.info("previous %s unavailable: %s", rel, exc)
+        self.seconds += time.time() - t0
         self._cache[rel] = val
         return val

@@ -70,7 +70,7 @@ class Run:
         self.cfg = load_yaml("series.yaml")
         self.obs: dict[str, list] = {}          # id -> observations (for derived calcs + writing)
         self.meta: dict[str, dict] = {}         # id -> metadata
-        self.provider_log: dict[str, dict] = defaultdict(lambda: {"ok": 0, "failed": 0, "fallback": 0, "errors": []})
+        self.provider_log: dict[str, dict] = defaultdict(lambda: {"ok": 0, "failed": 0, "fallback": 0, "errors": [], "seconds": 0.0})
         self.started = now_utc()
 
     # ---------------------------------------------------------------- helpers
@@ -137,6 +137,13 @@ class Run:
 
     # ---------------------------------------------------------------- series
     def fetch_one(self, provider: str, key: str, start: str, need_meta: bool):
+        t0 = time.time()
+        try:
+            return self._fetch_one(provider, key, start, need_meta)
+        finally:
+            self.provider_log[provider]["seconds"] += time.time() - t0  # timing per provider (run report)
+
+    def _fetch_one(self, provider: str, key: str, start: str, need_meta: bool):
         if provider == "fred":
             return fred.fetch_series(key, start=start, with_meta=need_meta)
         if provider == "nyfed":
@@ -304,7 +311,9 @@ class Run:
             try:
                 if not self.provider_enabled(c["provider"]):
                     raise RuntimeError("provider disabled")
+                t0 = time.time()
                 rows, tenors, notes = self.fetch_curve(c, prev_rows)
+                self.provider_log[c["provider"]]["seconds"] += time.time() - t0
                 rows = {d: r for d, r in rows.items() if d <= self.today.isoformat()}
                 if prev_rows and self.mode == "incremental":
                     merged = dict(prev_rows)
@@ -453,8 +462,10 @@ class Run:
         for name, fn in tasks:
             if self.only and name not in self.only:
                 continue
+            t0 = time.time()
             try:
                 payload = fn()
+                self.provider_log[f"extra:{name}"]["seconds"] += time.time() - t0
                 payload["generated_at"] = now_utc()
                 write_json(self.out / f"{name}.json", payload, compact=False)
             except Exception as exc:  # noqa: BLE001
@@ -588,8 +599,10 @@ class Run:
         for m in self.meta.values():
             cat_status[m.get("status", "?")] += 1
         status = {"started_at": self.started, "finished_at": now_utc(), "mode": self.mode,
-                  "previous_base": self.prev.base or None, "counts": dict(cat_status),
-                  "providers": {k: v for k, v in self.provider_log.items()}}
+                  "previous_base": self.prev.base or None,
+                  "previous_fetch": {"requests": self.prev.requests, "seconds": round(self.prev.seconds, 1)},
+                  "counts": dict(cat_status),
+                  "providers": {k: dict(v, seconds=round(v["seconds"], 1)) for k, v in self.provider_log.items()}}
         write_json(self.out / "status.json", status, compact=False)
         return status
 
