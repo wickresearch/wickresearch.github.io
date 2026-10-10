@@ -12,7 +12,7 @@ These are the original Wick Research files from the first version of the site. T
 Web derivatives live in `site/assets/img/`. They are extracted from `wick-research-logo-navy.png` by separating the cream artwork from its flat navy background (alpha matte). Nothing is redrawn:
 * `logo.png`: full lockup, transparent background (nav, hero, footer, terminal)
 * `mark.png`: candle-bars mark only, transparent
-* `mark-32/64/180/512.png`, `favicon.ico`: the mark on a navy rounded square (favicons, app icon)
+* `wr-icon-16/32/48/180/192/512.png`, `wr-favicon.ico` (and `favicon.ico`): the mark on a navy rounded square (browser tab, app icon). The new filenames make browsers drop their cached copy of the old grey icon
 * `og-image.jpg`: 1200×630 link-preview card (logo on navy plus a one-line descriptor)
 
 The grey-background originals (`wick-research-logo.png`, `wick-research-mark.png`) are kept for print or other uses. They are not used on the site because the grey photographic field cannot be removed cleanly.
