@@ -2,8 +2,8 @@
 body.terminal { font-size: 14px; line-height: 1.45; }
 .t-top { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 16px; height: 48px; padding: 0 16px;
   background: var(--navy-2); border-bottom: 1px solid var(--line); }
-.t-top .brand img { width: 28px; height: 28px; border-radius: 6px; }
-.t-top .brand span { font-size: 14px; }
+.t-top .brand img.t-logo { height: 30px; width: auto; }
+.t-top .brand img.t-mark { display: none; height: 25px; width: auto; }
 .t-title { color: var(--text-3); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-left: 1px solid var(--line-2); padding-left: 14px; }
 .t-status { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-status .issues { color: var(--warn); }
@@ -28,7 +28,8 @@ body.terminal { font-size: 14px; line-height: 1.45; }
   .t-nav a { white-space: nowrap; }
   .t-links, .t-title { display: none; }
   .t-main { padding: 12px 12px 32px; }
-  .t-top .brand span { display: none; }
+  .t-top .brand img.t-logo { display: none; }
+  .t-top .brand img.t-mark { display: block; }
 }
 
 /* Page scaffolding */

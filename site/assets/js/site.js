@@ -148,7 +148,8 @@ async function renderSnapshot() {
     });
     host.replaceChildren(...cells);
     const note = document.getElementById("snapshot-note");
-    if (note) note.textContent = `End-of-day and latest-published data, not real-time. Pipeline run ${fmtDate(cat.generated_at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} UTC. Sources: FRED, NY Fed, U.S. Treasury.`;
+    if (note) { note.textContent = `End-of-day data · updated ${fmtDate(cat.generated_at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} UTC`;
+      note.title = "End-of-day and latest-published data, not real-time. Sources: FRED, NY Fed, U.S. Treasury."; }
   } catch (e) {
     host.replaceChildren(el("p", { class: "muted", style: "padding:16px", text: "Market data is unavailable right now (the data files have not been built or could not be loaded)." }));
   }
