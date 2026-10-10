@@ -97,3 +97,24 @@ def test_library_expansion_dedupes_and_infers(tmp_path):
     assert r.library_index == [{"group": "G", "ids": ["UST10Y", "BTC", "FRED_DFF", "IOER"], "note": None}]
     e = runmod.Run.apply_auto(entries[0], {"title": "Fed funds", "units": "Percent", "frequency_short": "D"})
     assert e["units"] == "%" and e["change"] == "bp" and e["type"] == "administered"
+
+
+def test_us_curve_from_fred_with_treasury_fallback(tmp_path):
+    r = runmod.Run(tmp_path, Previous(None), "full", None)
+    c = {"id": "US", "name": "US", "provider": "fred", "fallback": "treasury", "start": "2026-01-01",
+         "fred_tenors": {"2Y": "DGS2", "10Y": "DGS10"}, "type": "treasury_yield"}
+    r.fred_ids = {"DGS2": "UST2Y", "DGS10": "UST10Y"}
+    r.obs = {"UST2Y": [("2025-12-31", 4.0), ("2026-01-02", 4.1)], "UST10Y": [("2026-01-02", 4.5)]}
+    rows, tenors, notes = r.fetch_curve(c, None)
+    assert tenors == ["2Y", "10Y"] and rows == {"2026-01-02": {"2Y": 4.1, "10Y": 4.5}}
+    # FRED tenors missing -> run_curves falls back to the Treasury XML provider
+    r.obs = {}
+    saved = runmod.treasury.fetch_curve
+    runmod.treasury.fetch_curve = lambda *a, **k: {"2026-01-02": {"2Y": 4.2, "10Y": 4.6}}
+    try:
+        r.cfg = {"curves": [c]}
+        r.run_curves()
+    finally:
+        runmod.treasury.fetch_curve = saved
+    assert r.meta["CURVE_US"]["provider"] == "treasury" and r.obs["US_10Y"] == [("2026-01-02", 4.6)]
+    assert any("served from treasury" in n for n in r.meta["CURVE_US"]["notes"])

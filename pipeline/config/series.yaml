@@ -150,7 +150,17 @@ policy_rates:
 # Sovereign curves (matrix files: data/curves/<id>.json). Tenor columns are also exposed as
 # virtual series "<ID>_<TENOR>" (e.g. US_10Y) in the catalogue.
 curves:
-  - {id: US, name: "US Treasury par curve", provider: treasury, check: tested, start_year: 2000, type: treasury_yield}
+  # US curve: built from FRED's H.15 constant-maturity yields (already fetched above, so no extra calls);
+  # the Treasury's own XML feed (adds 6W/2M/4M bills, slower) is the automatic fallback.
+  - id: US
+    name: "US Treasury par curve"
+    provider: fred
+    fallback: treasury
+    check: tested
+    start: "2000-01-01"
+    start_year: 2000
+    type: treasury_yield
+    fred_tenors: {"1M": DGS1MO, "3M": DGS3MO, "6M": DGS6MO, "1Y": DGS1, "2Y": DGS2, "3Y": DGS3, "5Y": DGS5, "7Y": DGS7, "10Y": DGS10, "20Y": DGS20, "30Y": DGS30}
   - {id: DE, name: "German Bund curve (Svensson zero)", provider: bundesbank, check: tested, start: "2000-01-01", type: treasury_yield}
   - {id: UK, name: "UK gilt nominal par curve (BoE)", provider: boe, check: partial, start: "2000-01-01", type: treasury_yield}
   - {id: JP, name: "JGB curve (MoF)", provider: mof, check: partial, type: treasury_yield}

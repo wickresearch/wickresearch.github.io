@@ -200,6 +200,7 @@ class Run:
 
     def run_series(self):
         lib = self.library_entries()
+        self.fred_ids = {x["key"]: x["id"] for x in self.cfg["series"] + lib if x["provider"] == "fred"}
         for s in self.cfg["series"] + lib:
             sid = s["id"]
             if self.only and sid not in self.only:
@@ -261,7 +262,23 @@ class Run:
         last = max(prev_rows) if prev_rows else None
         incr = self.mode == "incremental" and last is not None
         since = (calc.D(last) - dt.timedelta(days=20)) if incr else calc.D(c.get("start", "2000-01-01"))
-        if p == "treasury":
+        if p == "fred":
+            # Curve assembled from FRED constant-maturity series that run_series already fetched
+            # (no extra API calls). Tenor -> FRED ID mapping lives in the curve's config.
+            tenors, rows = [], defaultdict(dict)
+            start = c.get("start", "2000-01-01")
+            for t, key in c["fred_tenors"].items():
+                obs = self.obs.get(getattr(self, "fred_ids", {}).get(key, key))
+                if not obs:
+                    continue
+                tenors.append(t)
+                for d, v in obs:
+                    if d >= start:
+                        rows[d][t] = v
+            if len(tenors) < len(c["fred_tenors"]) // 2:
+                raise ValueError(f"too few FRED tenors available ({tenors})")
+            rows = dict(rows)
+        elif p == "treasury":
             tenors = [t for _, t in treasury.TENORS]
             if incr:
                 months, d = [], since.replace(day=1)
@@ -309,11 +326,22 @@ class Run:
                           for d, row in zip(prev["d"], prev["y"])} if prev else None)
             status, notes = "ok", []
             try:
-                if not self.provider_enabled(c["provider"]):
-                    raise RuntimeError("provider disabled")
-                t0 = time.time()
-                rows, tenors, notes = self.fetch_curve(c, prev_rows)
-                self.provider_log[c["provider"]]["seconds"] += time.time() - t0
+                rows = None
+                for prov in [c["provider"]] + ([c["fallback"]] if c.get("fallback") else []):
+                    try:
+                        if not self.provider_enabled(prov):
+                            raise RuntimeError(f"provider {prov} disabled")
+                        t0 = time.time()
+                        rows, tenors, notes = self.fetch_curve(dict(c, provider=prov), prev_rows)
+                        self.provider_log[prov]["seconds"] += time.time() - t0
+                        if prov != c["provider"]:
+                            notes = notes + [f"primary source ({c['provider']}) unavailable; served from {prov}"]
+                        c = dict(c, provider=prov)
+                        break
+                    except Exception as exc:  # noqa: BLE001
+                        if prov == (c.get("fallback") or c["provider"]):
+                            raise
+                        self.record_error(prov, f"curve {cid}", exc)
                 rows = {d: r for d, r in rows.items() if d <= self.today.isoformat()}
                 if prev_rows and self.mode == "incremental":
                     merged = dict(prev_rows)

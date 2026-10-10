@@ -69,7 +69,7 @@ Reasons for this design and the alternatives considered are in [docs/AUDIT_AND_A
 |---|---|---|
 | FRED (St. Louis Fed) | The core macro source: fed funds (daily since 1954), target and range, IORB/IOER, SOFR and averages, full CMT curve and bills, TIPS, breakevens, H.4.1, money, credit, inflation, labour, activity, housing, fiscal, SEP, US indices, VIX, FX, energy, metals, crypto, international rates, release calendar. The broad watchlist is `fred_library` in `pipeline/config/series.yaml`. | **Yes** (free) |
 | NY Fed Markets API | EFFR, OBFR, SOFR, TGCR, BGCR with percentiles and volumes | No |
-| U.S. Treasury | Daily par yield curve (XML); FiscalData: daily TGA, auctions | No |
+| U.S. Treasury | Par yield curve XML (fallback for the US curve, which is built from FRED's DGS series); FiscalData: daily TGA, auctions | No |
 | Deutsche Bundesbank | Bund yield curve (Svensson), 1–30Y | No |
 | Bank of England | Bank Rate, gilt par yields 5/10/20Y | No |
 | Bank of Canada | Policy rate, GoC benchmark yields | No |
