@@ -92,3 +92,9 @@ def test_is_stale():
     assert not calc.is_stale("2026-10-08", "D", today)
     assert calc.is_stale("2026-09-20", "D", today)
     assert not calc.is_stale("2026-08-01", "M", today)
+
+
+def test_is_stale_override():
+    today = dt.date(2026, 10, 10)
+    assert calc.is_stale("2026-10-02", "D", today)                 # default 6 days
+    assert not calc.is_stale("2026-10-02", "D", today, 12)         # H.10 FX published weekly

@@ -121,3 +121,12 @@ The terminal's **FRED library** module and `fred_library` in `pipeline/config/se
 | **Not yet verified** (same FRED API; checked on the first pipeline run) | All other library IDs. **WEI** could not be tested because the verification fetch was rate-limited. |
 
 A library ID that FRED does not return is reported as `failed` in *Sources & status* and greyed out in the library. It never breaks a build. SEP projection series are dated by target year, so they are allowed future dates (`allow_future_days`).
+
+## 7. First production run (10 October 2026, GitHub Actions, full mode)
+
+Run `38045736794` on `wickresearch/wickresearch.github.io`, 10:52–11:06 UTC, with `FRED_API_KEY` set: **269 of 270 series OK, 1 failed**. Per provider: FRED 171 OK / 1 failed, NY Fed 7, Coinbase 3, FiscalData 1, Treasury curve 1, Bundesbank 1, **Bank of England 1**, **MoF Japan 1**, Bank of Canada 1, BIS 7. Calendar, news, research, auctions and events all built without errors.
+
+* **Bank of England CSV export** and **MoF JGB history file** are now **verified**. Both parsed successfully from GitHub's runners.
+* The one failure was `GACDINA066MSFRBNY` (my guessed ID for the Empire State survey). FRED returned HTTP 400, so it was removed from the library rather than replaced with another guess.
+* Staleness thresholds were tuned to actual publication lags seen in this run: H.10 FX and broad-dollar indices (weekly release, 12 days), Kim–Wright term premium (12), IMF metals and Case-Shiller (130), weekly M2 (45) and the ECB balance sheet (21). DFEDTAR and IOER are marked historical. The OECD 3-month interbank series (ending January 2026) were removed.
+* Each run's report is published to the `pipeline-status` branch (`status.json`, `SERIES.md`).

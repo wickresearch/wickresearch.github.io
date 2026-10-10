@@ -131,6 +131,8 @@ class Run:
             "provider": provider, "provider_name": prov.get("name", provider), "provider_key": key,
             "source_url": url, "check": s.get("check"), "owner": s.get("owner"), "formula": s.get("formula"),
             "step": s.get("step", False),
+            # publication-lag override for the staleness check, and a flag for discontinued-by-design series
+            "stale_days": s.get("stale_days"), "historical": s.get("historical", False),
         }
 
     # ---------------------------------------------------------------- series
@@ -171,7 +173,7 @@ class Run:
                 e = {"id": sid, "provider": "fred", "key": key, "group": "library", "auto": True,
                      "type": it.get("type", g.get("type", "official_release")), "check": it.get("check", g.get("check", "family")),
                      "start": it.get("start", g.get("start", "1950-01-01"))}
-                for f in ("name", "units", "freq", "change", "scale", "owner", "allow_future_days", "formula"):
+                for f in ("name", "units", "freq", "change", "scale", "owner", "allow_future_days", "formula", "stale_days", "historical"):
                     if f in it:
                         e[f] = it[f]
                 entries.append(e)
@@ -430,7 +432,8 @@ class Run:
                 write_json(self.out / "series" / f"{sid}.json", series_payload(sid, meta, obs))
                 summ = calc.summarise(obs, meta.get("change", "abs"), meta.get("units") or "")
                 entry["latest"] = summ
-                entry["stale"] = calc.is_stale(obs[-1][0], meta.get("freq", "D"), self.today) and not meta.get("step")
+                entry["stale"] = (not meta.get("step") and not meta.get("historical")
+                                  and calc.is_stale(obs[-1][0], meta.get("freq", "D"), self.today, meta.get("stale_days")))
                 entry["file"] = f"series/{sid}.json"
             cat[sid] = entry
         curves = {k[6:]: v for k, v in self.meta.items() if k.startswith("CURVE_")}

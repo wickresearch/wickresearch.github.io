@@ -224,8 +224,10 @@ def summarise(obs: Obs, kind: str, units: str, asof_date: str | None = None) -> 
 STALE_DAYS = {"D": 6, "W": 14, "M": 100, "Q": 200, "A": 550}
 
 
-def is_stale(last_date: str, freq: str, today: dt.date | None = None) -> bool:
+def is_stale(last_date: str, freq: str, today: dt.date | None = None, max_days: int | None = None) -> bool:
     """True if the latest observation is older than expected for its frequency
-    (allowing for weekends/holidays and normal publication lags)."""
+    (allowing for weekends/holidays and normal publication lags). `max_days` overrides the
+    frequency default for series published with a longer lag (e.g. the Fed's H.10 FX rates,
+    released weekly, or IMF commodity prices, ~2 months behind)."""
     today = today or dt.date.today()
-    return (today - D(last_date)).days > STALE_DAYS.get(freq, 30)
+    return (today - D(last_date)).days > (max_days or STALE_DAYS.get(freq, 30))

@@ -21,6 +21,9 @@
 #               production = returned data in the existing GitHub Actions pipeline (raw.json, 2026-10-09)
 #               family     = same endpoint/series family as a tested call; confirmed at first pipeline run
 #   start     Earliest date to request (keeps files small).
+#   stale_days  Optional: days after which the latest observation counts as stale (default by freq:
+#               D 6, W 14, M 100, Q 200, A 550). Use for series published with a lag (H.10 FX: 12).
+#   historical  Optional: true for series discontinued by design (e.g. DFEDTAR) – never flagged stale.
 #   fallback  Optional {provider, key} used if the primary provider fails.
 #   owner     Copyright owner for third-party data shown via FRED (displayed with the series).
 # ------------------------------------------------------------------------------------------
@@ -37,7 +40,7 @@ series:
   - {id: BE5Y, name: "US 5Y breakeven inflation", group: rates_us, provider: fred, key: T5YIE, units: "%", freq: D, change: bp, type: derived, check: family, start: "2003-01-01"}
   - {id: BE10Y, name: "US 10Y breakeven inflation", group: rates_us, provider: fred, key: T10YIE, units: "%", freq: D, change: bp, type: derived, check: family, start: "2003-01-01"}
   - {id: BE5Y5Y, name: "US 5y5y forward inflation expectation", group: rates_us, provider: fred, key: T5YIFR, units: "%", freq: D, change: bp, type: derived, check: tested, start: "2003-01-01"}
-  - {id: TP10Y, name: "US 10Y term premium (Kim–Wright)", group: rates_us, provider: fred, key: THREEFYTP10, units: "%", freq: D, change: bp, type: model_estimate, check: production, start: "1990-01-01"}
+  - {id: TP10Y, name: "US 10Y term premium (Kim–Wright)", group: rates_us, provider: fred, key: THREEFYTP10, units: "%", freq: D, change: bp, type: model_estimate, stale_days: 12, check: production, start: "1990-01-01"}
 
   # ---------------- US front end: administered vs market overnight rates ----------------
   - {id: FF_UPPER, name: "Fed funds target range – upper", group: frontend, provider: fred, key: DFEDTARU, units: "%", freq: D, change: bp, type: administered, check: family, start: "2008-12-16"}
@@ -106,17 +109,17 @@ series:
   - {id: VIX, name: "CBOE VIX", group: volatility, provider: fred, key: VIXCLS, units: "index", freq: D, change: abs, type: market_close, check: production, owner: "Chicago Board Options Exchange", start: "2000-01-01"}
   - {id: GVZ, name: "CBOE Gold ETF volatility (GVZ)", group: volatility, provider: fred, key: GVZCLS, units: "index", freq: D, change: abs, type: market_close, check: tested, owner: "Chicago Board Options Exchange", start: "2008-06-03"}
   - {id: OVX, name: "CBOE Crude Oil ETF volatility (OVX)", group: volatility, provider: fred, key: OVXCLS, units: "index", freq: D, change: abs, type: market_close, check: family, owner: "Chicago Board Options Exchange", start: "2007-05-10"}
-  - {id: USD_BROAD, name: "Nominal broad US dollar index (Fed)", group: fx, provider: fred, key: DTWEXBGS, units: "index", freq: D, change: pct, type: official_release, check: production, start: "2006-01-02"}
-  - {id: EURUSD, name: "EUR/USD", group: fx, provider: fred, key: DEXUSEU, units: "USD per EUR", freq: D, change: pct, type: official_release, check: production, start: "1999-01-04"}
-  - {id: GBPUSD, name: "GBP/USD", group: fx, provider: fred, key: DEXUSUK, units: "USD per GBP", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
-  - {id: USDJPY, name: "USD/JPY", group: fx, provider: fred, key: DEXJPUS, units: "JPY per USD", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
-  - {id: USDCHF, name: "USD/CHF", group: fx, provider: fred, key: DEXSZUS, units: "CHF per USD", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
-  - {id: USDCAD, name: "USD/CAD", group: fx, provider: fred, key: DEXCAUS, units: "CAD per USD", freq: D, change: pct, type: official_release, check: family, start: "1990-01-02"}
-  - {id: USDCNY, name: "USD/CNY", group: fx, provider: fred, key: DEXCHUS, units: "CNY per USD", freq: D, change: pct, type: official_release, check: production, start: "1990-01-02"}
+  - {id: USD_BROAD, name: "Nominal broad US dollar index (Fed)", group: fx, provider: fred, key: DTWEXBGS, units: "index", freq: D, change: pct, type: official_release, stale_days: 12, check: production, start: "2006-01-02"}
+  - {id: EURUSD, name: "EUR/USD", group: fx, provider: fred, key: DEXUSEU, units: "USD per EUR", freq: D, change: pct, type: official_release, stale_days: 12, check: production, start: "1999-01-04"}
+  - {id: GBPUSD, name: "GBP/USD", group: fx, provider: fred, key: DEXUSUK, units: "USD per GBP", freq: D, change: pct, type: official_release, stale_days: 12, check: production, start: "1990-01-02"}
+  - {id: USDJPY, name: "USD/JPY", group: fx, provider: fred, key: DEXJPUS, units: "JPY per USD", freq: D, change: pct, type: official_release, stale_days: 12, check: production, start: "1990-01-02"}
+  - {id: USDCHF, name: "USD/CHF", group: fx, provider: fred, key: DEXSZUS, units: "CHF per USD", freq: D, change: pct, type: official_release, stale_days: 12, check: production, start: "1990-01-02"}
+  - {id: USDCAD, name: "USD/CAD", group: fx, provider: fred, key: DEXCAUS, units: "CAD per USD", freq: D, change: pct, type: official_release, stale_days: 12, check: family, start: "1990-01-02"}
+  - {id: USDCNY, name: "USD/CNY", group: fx, provider: fred, key: DEXCHUS, units: "CNY per USD", freq: D, change: pct, type: official_release, stale_days: 12, check: production, start: "1990-01-02"}
   - {id: WTI, name: "WTI crude (Cushing spot)", group: commodities, provider: fred, key: DCOILWTICO, units: "USD/bbl", freq: D, change: pct, type: market_close, check: production, start: "1990-01-02"}
   - {id: BRENT, name: "Brent crude (Europe spot)", group: commodities, provider: fred, key: DCOILBRENTEU, units: "USD/bbl", freq: D, change: pct, type: market_close, check: production, start: "1990-01-02"}
   - {id: HENRY_HUB, name: "Henry Hub natural gas spot", group: commodities, provider: fred, key: DHHNGSP, units: "USD/MMBtu", freq: D, change: pct, type: market_close, check: production, start: "1997-01-07"}
-  - {id: COPPER, name: "Copper (IMF, monthly avg)", group: commodities, provider: fred, key: PCOPPUSDM, units: "USD/t", freq: M, change: pct, type: official_release, check: production, start: "1990-01-01"}
+  - {id: COPPER, name: "Copper (IMF, monthly avg)", group: commodities, provider: fred, key: PCOPPUSDM, units: "USD/t", freq: M, change: pct, type: official_release, stale_days: 130, check: production, start: "1990-01-01"}
   - {id: GOLD_PROXY, name: "Gold proxy: PAX Gold (PAXG-USD)", group: commodities, provider: coinbase, key: PAXG-USD, units: "USD/oz-token", freq: D, change: pct, type: proxy, check: tested, start: "2021-01-01"}
   - {id: BTC, name: "Bitcoin (BTC-USD)", group: crypto, provider: coinbase, key: BTC-USD, units: "USD", freq: D, change: pct, type: market_close, check: tested, start: "2015-07-21", fallback: {provider: fred, key: CBBTCUSD}}
   - {id: ETH, name: "Ether (ETH-USD)", group: crypto, provider: coinbase, key: ETH-USD, units: "USD", freq: D, change: pct, type: market_close, check: family, start: "2016-05-19", fallback: {provider: fred, key: CBETHUSD}}
@@ -205,14 +208,14 @@ fred_library:
     series:
       - {key: DFF, name: "Effective fed funds rate (daily, since 1954)", type: overnight_market, start: "1954-07-01"}
       - {key: FEDFUNDS, name: "Effective fed funds rate (monthly avg)", type: overnight_market, start: "1954-07-01"}
-      - {key: DFEDTAR, name: "Fed funds target (single target, to Dec 2008)", check: tested, start: "1982-09-27"}
+      - {key: DFEDTAR, name: "Fed funds target (single target, to Dec 2008)", check: tested, start: "1982-09-27", historical: true}
       - DFEDTARU
       - DFEDTARL
       - IORB
-      - {key: IOER, name: "Interest on excess reserves (to Jul 2021)", start: "2008-10-09"}
+      - {key: IOER, name: "Interest on excess reserves (to Jul 2021)", start: "2008-10-09", historical: true}
       - RRPONTSYAWARD
       - {key: DPCREDIT, name: "Discount window primary credit rate", check: tested, start: "2003-01-09"}
-      - {key: DPRIME, name: "Bank prime loan rate", start: "1955-08-04"}
+      - {key: DPRIME, name: "Bank prime loan rate", start: "1955-08-04", stale_days: 12}
       - {key: EFFR, type: overnight_market}
       - {key: EFFRVOL, name: "EFFR volume", type: overnight_market}
       - {key: OBFR, name: "Overnight bank funding rate (FRED)", type: overnight_market}
@@ -267,7 +270,7 @@ fred_library:
       - {key: RPONTSYD, name: "Fed overnight repo operations (Treasury)"}
       - {key: SWPT, name: "Central bank liquidity swaps"}
       - M2SL
-      - {key: WM2NS, name: "M2 (weekly, NSA)"}
+      - {key: WM2NS, name: "M2 (weekly, NSA)", stale_days: 45}
       - {key: BOGMBASE, name: "Monetary base"}
   - group: "Credit & financial conditions"
     type: model_estimate
@@ -339,11 +342,10 @@ fred_library:
       - PERMIT
       - {key: HSN1F, name: "New home sales", check: production}
       - {key: EXHOSLUSM495S, name: "Existing home sales", check: production}
-      - {key: CSUSHPINSA, name: "Case-Shiller US national home price index", owner: "S&P Dow Jones Indices LLC"}
+      - {key: CSUSHPINSA, name: "Case-Shiller US national home price index", owner: "S&P Dow Jones Indices LLC", stale_days: 130}
       - MORTGAGE30US
       - UMCSENT
       - GACDFSA066MSFRBPHI
-      - {key: GACDINA066MSFRBNY, name: "Empire State manufacturing: general activity", type: survey}
       - USREC
   - group: "Fiscal"
     type: official_release
@@ -372,25 +374,25 @@ fred_library:
       - GVZCLS
       - OVXCLS
       - DTWEXBGS
-      - {key: DTWEXAFEGS, name: "USD vs advanced foreign economies (Fed)", type: official_release, check: tested}
-      - {key: DTWEXEMEGS, name: "USD vs emerging market economies (Fed)", type: official_release}
+      - {key: DTWEXAFEGS, name: "USD vs advanced foreign economies (Fed)", type: official_release, check: tested, stale_days: 12}
+      - {key: DTWEXEMEGS, name: "USD vs emerging market economies (Fed)", type: official_release, stale_days: 12}
       - DEXUSEU
       - DEXUSUK
       - DEXJPUS
       - DEXSZUS
       - DEXCAUS
       - DEXCHUS
-      - {key: DEXINUS, name: "USD/INR", type: official_release}
-      - {key: DEXMXUS, name: "USD/MXN", type: official_release}
-      - {key: DEXKOUS, name: "USD/KRW", type: official_release}
-      - {key: DEXBZUS, name: "USD/BRL", type: official_release}
-      - {key: DEXUSAL, name: "AUD/USD", type: official_release}
+      - {key: DEXINUS, name: "USD/INR", type: official_release, stale_days: 12}
+      - {key: DEXMXUS, name: "USD/MXN", type: official_release, stale_days: 12}
+      - {key: DEXKOUS, name: "USD/KRW", type: official_release, stale_days: 12}
+      - {key: DEXBZUS, name: "USD/BRL", type: official_release, stale_days: 12}
+      - {key: DEXUSAL, name: "AUD/USD", type: official_release, stale_days: 12}
       - DCOILWTICO
       - DCOILBRENTEU
       - DHHNGSP
       - {key: GASREGW, name: "US regular gasoline (weekly avg)"}
       - PCOPPUSDM
-      - {key: PALUMUSDM, name: "Aluminium (IMF, monthly avg)", type: official_release}
+      - {key: PALUMUSDM, name: "Aluminium (IMF, monthly avg)", type: official_release, stale_days: 130}
       - CBBTCUSD
       - CBETHUSD
   - group: "International (via FRED)"
@@ -399,7 +401,7 @@ fred_library:
       - ECBDFR
       - {key: ECBMRRFR, name: "ECB main refinancing rate", type: administered}
       - {key: ECBMLFR, name: "ECB marginal lending facility rate", type: administered}
-      - {key: ECBASSETSW, name: "ECB total assets", check: production}
+      - {key: ECBASSETSW, name: "ECB total assets", check: production, stale_days: 21}
       - CP0000EZCCM086NEST
       - IRLTLT01DEM156N
       - IRLTLT01FRM156N
@@ -410,5 +412,3 @@ fred_library:
       - IRLTLT01CHM156N
       - {key: IRLTLT01CAM156N, name: "Canada 10Y (monthly avg)"}
       - {key: IRLTLT01AUM156N, name: "Australia 10Y (monthly avg)"}
-      - {key: IR3TIB01EZM156N, name: "Euro area 3M interbank (monthly)"}
-      - {key: IR3TIB01GBM156N, name: "UK 3M interbank (monthly)"}

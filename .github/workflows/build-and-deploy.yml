@@ -91,9 +91,10 @@ jobs:
           json.dump(st, open("_status/status.json", "w"), indent=2)
           try:
               cat = json.load(open("site/data/catalog.json"))["series"]
-              rows = ["| id | status | stale | latest obs | provider | note |", "|---|---|---|---|---|---|"]
+              rows = ["| id | status | stale | first obs | latest obs | n | latest value | provider | note |", "|---|---|---|---|---|---|---|---|---|"]
               for k, m in sorted(cat.items(), key=lambda kv: (kv[1].get("status") == "ok", kv[0])):
-                  rows.append(f"| {k} | {m.get('status')} | {m.get('stale', '')} | {(m.get('latest') or {}).get('date', '')} | {m.get('provider_key', '')} | {(m.get('note') or '')[:80]} |")
+                  L = m.get("latest") or {}
+                  rows.append(f"| {k} | {m.get('status')} | {m.get('stale', '')} | {L.get('first_date', '')} | {L.get('date', '')} | {L.get('n', '')} | {L.get('value', '')} | {m.get('provider_key', '')} | {(m.get('note') or '')[:80]} |")
               open("_status/SERIES.md", "w").write("\n".join(rows) + "\n")
           except Exception as e:
               open("_status/SERIES.md", "w").write(f"catalog unavailable: {e}\n")
