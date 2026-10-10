@@ -35,15 +35,6 @@ document.querySelectorAll(".nav-toggle").forEach((btn) => {
 });
 document.querySelectorAll("[data-year]").forEach((n) => (n.textContent = new Date().getFullYear()));
 
-// Hide the CV download link unless the PDF has actually been added to the site.
-document.querySelectorAll("[data-cv-link]").forEach(async (a) => {
-  try {
-    const r = await fetch(a.getAttribute("href"), { method: "HEAD" });
-    if (!r.ok) throw 0;
-    a.hidden = false;
-  } catch { a.hidden = true; }
-});
-
 // ---------------------------------------------------------------- research cards
 export function articleCard(a) {
   const meta = el("div", { class: "meta" },

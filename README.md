@@ -190,4 +190,3 @@ After that, deployment is automatic. To publish content changes, edit `content/a
 * **LinkedIn articles** have no public API. Add them to `content/articles.yaml` by hand.
 * **Saved views** (instrument selections, portfolios) are stored in the viewer's browser (`localStorage`). Shareable state lives in the URL hash. Accounts or server-side saved views would need a backend.
 * **Approximations** (documented in METHODOLOGY.md): first-order bond return proxy and DV01 P&L, simple-rate bill forwards, close-to-close event windows.
-* The downloadable CV link on `/about/` appears only once a PDF is added at `site/assets/cv/Ishrit_Tewari_CV.pdf`. It is not included by default because the CV contains a phone number.
