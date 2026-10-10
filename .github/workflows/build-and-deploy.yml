@@ -76,6 +76,35 @@ jobs:
           WICK_PREVIOUS_BASE: https://${{ github.repository_owner }}.github.io/data
         run: python -m pipeline.run --out site/data --mode "${{ steps.mode.outputs.mode }}"
 
+      - name: Publish run report to the pipeline-status branch
+        # A tiny orphan branch holding status.json and a per-series health table, so run health can be
+        # checked with git (or on github.com) without opening the Actions logs. Never touches main.
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          os.makedirs("_status", exist_ok=True)
+          try:
+              st = json.load(open("site/data/status.json"))
+          except Exception as e:
+              st = {"error": f"status.json missing: {e}"}
+          json.dump(st, open("_status/status.json", "w"), indent=2)
+          try:
+              cat = json.load(open("site/data/catalog.json"))["series"]
+              rows = ["| id | status | stale | latest obs | provider | note |", "|---|---|---|---|---|---|"]
+              for k, m in sorted(cat.items(), key=lambda kv: (kv[1].get("status") == "ok", kv[0])):
+                  rows.append(f"| {k} | {m.get('status')} | {m.get('stale', '')} | {(m.get('latest') or {}).get('date', '')} | {m.get('provider_key', '')} | {(m.get('note') or '')[:80]} |")
+              open("_status/SERIES.md", "w").write("\n".join(rows) + "\n")
+          except Exception as e:
+              open("_status/SERIES.md", "w").write(f"catalog unavailable: {e}\n")
+          PY
+          cd _status
+          git init -q -b pipeline-status
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "Pipeline run ${{ github.run_id }} (${{ steps.mode.outputs.mode }})"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" pipeline-status || echo "status push skipped"
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
