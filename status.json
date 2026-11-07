@@ -1,0 +1,113 @@
+{
+  "started_at": "2026-11-07T06:03:57+00:00",
+  "finished_at": "2026-11-07T06:07:05+00:00",
+  "mode": "incremental",
+  "previous_base": "https://wickresearch.github.io/data",
+  "previous_fetch": {
+    "requests": 192,
+    "seconds": 14.3
+  },
+  "counts": {
+    "ok": 264
+  },
+  "providers": {
+    "fred": {
+      "ok": 170,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 145.5
+    },
+    "nyfed": {
+      "ok": 7,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.6
+    },
+    "coinbase": {
+      "ok": 3,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 1.0
+    },
+    "fiscaldata": {
+      "ok": 1,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.0
+    },
+    "bundesbank": {
+      "ok": 1,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 2.4
+    },
+    "boe": {
+      "ok": 1,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.8
+    },
+    "mof": {
+      "ok": 1,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.7
+    },
+    "boc": {
+      "ok": 1,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.5
+    },
+    "bis": {
+      "ok": 7,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.0
+    },
+    "extra:calendar": {
+      "ok": 0,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.8
+    },
+    "extra:news": {
+      "ok": 0,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.8
+    },
+    "extra:research": {
+      "ok": 0,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.4
+    },
+    "extra:auctions": {
+      "ok": 0,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 0.4
+    },
+    "extra:events": {
+      "ok": 0,
+      "failed": 0,
+      "fallback": 0,
+      "errors": [],
+      "seconds": 2.5
+    }
+  }
+}
