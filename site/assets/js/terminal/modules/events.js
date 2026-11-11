@@ -4,11 +4,11 @@ import * as F from "../fmt.js";
 import { el, panel, errorBox, select, multiSelect, numberInput, downloadCSV } from "../ui.js";
 import { xyChart } from "../chart.js";
 import { eventPaths } from "../stats.js";
-import { header, formula } from "./common.js";
+import { header } from "./common.js";
 import { UNIVERSE } from "./cross.js";
 
 export async function render(root, { params, setParams }) {
-  root.append(header("Event studies", "Average behaviour around scheduled events, using daily closes. Each window shows the move from the close before the event."));
+  root.append(header("Event studies", "Market moves around scheduled events"));
   let ev;
   try { ev = await D.json("events.json"); } catch (e) { root.append(errorBox(e.message)); return; }
   const types = Object.entries(ev.types).filter(([, t]) => t.dates?.length);
@@ -38,14 +38,10 @@ export async function render(root, { params, setParams }) {
     out.replaceChildren(el("div", { class: "loading", text: "Running…" }));
     const { ok, failed } = await D.many(ids);
     const grid = el("div", { class: "grid3" });
-    const info = panel("Method", { span: 3 });
+    const info = panel("Sample", { span: 3 });
     info.body.append(el("dl", { class: "kv" },
       el("dt", { text: "Events" }), el("dd", { text: `${t.label}: ${dates.length} dates since ${F.date(since, "long")}` }),
-      el("dt", { text: "Event dates" }), el("dd", { text: t.source }),
-      el("dt", { text: "Timing" }), el("dd", { text: t.timing }),
-      el("dt", { text: "Window" }), el("dd", { text: `${pre} trading days before to ${post} after; day 0 = first trading day on or after the event date` })),
-      formula("path_k = X_{t0+k} − X_{t0−1}  (bp for yields)   or   X_{t0+k} / X_{t0−1} − 1  (% for prices)"),
-      el("p", { class: "note", text: "Close-to-close daily data cannot isolate the minutes after a release: other news on the same day is included. The band is the interquartile range across events. Each instrument uses its own trading calendar; events without a complete window are dropped." }));
+      el("dt", { text: "Window" }), el("dd", { text: `−${pre} to +${post} trading days` })));
     grid.append(info.root);
     const rowsAll = [];
     for (const id of ids) {

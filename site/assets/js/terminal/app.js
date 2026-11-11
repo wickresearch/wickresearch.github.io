@@ -56,6 +56,18 @@ function buildNav() {
     el("a", { href: "/research/", text: "Research library ↗" }), el("a", { href: "/framework/", text: "Framework ↗" }));
 }
 
+// ------------------------------------------------------------------ live updates
+// The pipeline runs every 15 minutes on weekdays and redeploys only when data changed. The page
+// polls the tiny build.json and, when a new build appears, reloads the data and redraws the view.
+const POLL_MS = 60_000;
+let builtAt = null, lastBuild = null;
+
+function ago(iso) {
+  if (!iso) return "";
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
+}
+
 async function statusBar() {
   const host = document.getElementById("datastatus");
   try {
@@ -64,34 +76,82 @@ async function statusBar() {
     const stale = all.filter((m) => m.stale).length, fb = all.filter((m) => m.status === "fallback").length,
       failed = all.filter((m) => m.status === "failed").length;
     const issues = stale + fb + failed;
+    builtAt = (lastBuild && lastBuild.data_changed_at) || cat.generated_at;
     host.replaceChildren(...[
       el("span", { class: "dot " + (failed || fb ? "warn" : "ok") }),
-      el("span", { text: `End-of-day data · built ${F.date(cat.generated_at, "time")}` }),
+      el("span", { class: "live", text: "Live" }),
+      el("span", { id: "updated-ago", text: ` · data updated ${F.date(builtAt, "time")} (${ago(builtAt)})` }),
       issues ? el("a", { href: "#sources", class: "issues", text: ` · ${issues} series flagged` }) : null].filter(Boolean));
-    host.title = st ? `Pipeline ${st.mode} run ${st.started_at} → ${st.finished_at}` : "";
+    host.title = `Checks for new data every minute. Last pipeline run: ${F.date(lastBuild?.built_at || st?.finished_at || cat.generated_at, "time")}`;
   } catch (e) {
     host.replaceChildren(el("span", { class: "dot bad" }), el("span", { text: "Data files unavailable" }));
   }
 }
 
-async function render() {
+function toast(changes) {
+  const fresh = (changes || []).filter((c) => c.new_obs && c.freq !== "D");
+  const list = (fresh.length ? fresh : changes || []).slice(0, 4).map((c) => `${c.name} (${F.obsDate(c.date, c.freq)})`);
+  const t = el("div", { class: "toast", role: "status" },
+    el("strong", { text: fresh.length ? "New releases: " : "Data updated" }), fresh.length ? list.join(" · ") : "",
+    fresh.length > 4 ? ` +${fresh.length - 4} more` : "");
+  document.body.append(t);
+  setTimeout(() => t.classList.add("out"), 7000);
+  setTimeout(() => t.remove(), 7600);
+}
+
+/** Views with typed-in inputs are not redrawn automatically; a button offers the update instead. */
+function busy() {
+  const a = document.activeElement;
+  return parseHash().mod === "risk" || (a && view.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+}
+
+function offerUpdate(changes) {
+  if (document.getElementById("update-pill")) return;
+  const b = el("button", { id: "update-pill", class: "update-pill", type: "button", text: "New data available – update view",
+    onclick: () => { b.remove(); render({ keep: true }); toast(changes); } });
+  document.body.append(b);
+}
+
+async function checkForUpdate() {
+  if (document.hidden) return;
+  try {
+    const b = await D.build();
+    const changed = D.setVersion(b.data_hash);
+    lastBuild = b;
+    if (!changed) { const n = document.getElementById("updated-ago"); if (n && builtAt) n.textContent = ` · data updated ${F.date(builtAt, "time")} (${ago(builtAt)})`; return; }
+    await statusBar();
+    if (busy()) offerUpdate(b.changes);
+    else { await render({ keep: true }); toast(b.changes); }
+  } catch (e) { /* offline or build.json missing: keep showing what is on screen */ }
+}
+
+async function render({ keep = false } = {}) {
   const { mod, arg, params } = parseHash();
   nav.querySelectorAll("a[data-mod]").forEach((a) => a.toggleAttribute("aria-current", a.dataset.mod === mod));
   const m = MODULES.find((x) => x.id === mod);
   document.title = `${m ? m.title : mod === "series" ? "Series" : "Terminal"} · Wick Macro Terminal`;
-  view.replaceChildren(el("div", { class: "loading", text: "Loading…" }));
-  view.focus({ preventScroll: true });
-  window.scrollTo(0, 0);
+  const y = window.scrollY;
+  if (!keep) {
+    view.replaceChildren(el("div", { class: "loading", text: "Loading…" }));
+    view.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
   try {
-    if (mod === "series") return await seriesView(view, arg, params);
+    if (mod === "series") {
+      const host = keep ? el("div") : view;
+      await seriesView(host, arg, params);
+      if (keep) { view.replaceChildren(...host.childNodes); window.scrollTo(0, y); }
+      return;
+    }
     if (!m) { view.replaceChildren(errorBox(`Unknown module "${mod}".`)); return; }
     const module = await import(`./modules/${mod}.js`);
     const page = el("div", { class: "page" });
-    view.replaceChildren(page);
+    if (!keep) view.replaceChildren(page);
     await module.render(page, { params, setParams, go });
+    if (keep) { view.replaceChildren(page); window.scrollTo(0, y); }
   } catch (e) {
     console.error(e);
-    view.replaceChildren(errorBox(`This module could not be loaded: ${e.message}`, "Other modules are unaffected. See Sources & status."));
+    if (!keep) view.replaceChildren(errorBox(`This module could not be loaded: ${e.message}`, "Other modules are unaffected. See Sources & status."));
   }
 }
 
@@ -138,7 +198,7 @@ async function seriesView(root, id, params) {
       ["Latest observation", F.obsDate(L.date, m.freq)], ["First observation", F.obsDate(L.first_date, m.freq)], ["Observations", L.n],
       ["Provider last updated", pm.last_updated], ["Retrieved by pipeline", F.date(m.retrieved_at, "time")],
       ["Status", m.status === "ok" ? (m.stale ? "Stale – older than expected for its frequency" : "OK") : m.status === "fallback" ? "Last good data (latest fetch failed)" : m.status],
-      ["Verification", F.CHECK[m.check] || m.check], ["Copyright / owner", m.owner], ["Formula", m.formula], ["Inputs", m.inputs && m.inputs.join(", ")], ["Note", m.note]]
+      ["Verification", F.CHECK[m.check] || m.check], ["Copyright / owner", m.owner], ["Note", m.note]]
       .filter(([, v]) => v != null && v !== "").flatMap(([k, v]) => [el("dt", { text: k }), el("dd", {}, v)])),
     el("button", { class: "btn-sm", type: "button", text: "Download all observations (CSV)", onclick: () =>
       downloadCSV(`${id}.csv`, ["date", `${id} (${m.units || ""})`], s.d.map((d, i) => [d, s.v[i]])) }));
@@ -151,6 +211,11 @@ export function kpi(label, value, sub) {
 }
 
 buildNav();
-statusBar();
-window.addEventListener("hashchange", render);
-render();
+(async () => {
+  try { lastBuild = await D.build(); D.setVersion(lastBuild.data_hash); } catch (e) { /* first deploy without build.json */ }
+  statusBar();
+  window.addEventListener("hashchange", () => render());
+  await render();
+  setInterval(checkForUpdate, POLL_MS);
+  document.addEventListener("visibilitychange", () => !document.hidden && checkForUpdate());
+})();

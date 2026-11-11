@@ -4,13 +4,13 @@
 #   1. Settings → Secrets and variables → Actions → New repository secret: FRED_API_KEY
 #   2. Settings → Pages → Build and deployment → Source: "GitHub Actions"
 #
-# Schedules are in UTC and follow the data, not a fixed "live" cadence:
-#   13:20  after NY Fed reference rates (~08:00 ET) and the Daily Treasury Statement (~16:00 ET prior day)
-#   21:50  after FRED/H.15 updates and the US cash close
-#   23:40  after the Treasury par-curve publication (~18:00 ET) and the UTC crypto day close
-#   05:20  Asia/Europe overnight data (BoJ/MoF, BIS, RSS) – daily incl. weekends (crypto)
-#   Sunday 04:10 full refresh: refetches complete histories to pick up revisions + keep-alive commit
-# GitHub may delay scheduled runs by several minutes at busy times.
+# Schedules (UTC). GitHub may start scheduled runs late at busy times, so odd minutes are used.
+#   every 15 min, Mon–Fri   quick run: asks FRED which series changed since the last build and
+#                           downloads only those; every other source is refreshed in full.
+#                           The site is redeployed only if the published data changed.
+#   hourly, Sat–Sun         quick run (crypto, weekend releases)
+#   23:40 daily             incremental run: re-checks every FRED series (safety net)
+#   Sunday 04:10            full refresh: refetches complete histories to pick up revisions + keep-alive commit
 name: Build data & deploy site
 
 on:
@@ -18,18 +18,17 @@ on:
     branches: [main]
     paths: ["site/**", "content/**", "pipeline/**", "requirements.txt", ".github/workflows/build-and-deploy.yml"]
   schedule:
-    - cron: "20 13 * * 1-5"
-    - cron: "50 21 * * 1-5"
-    - cron: "40 23 * * 1-5"
-    - cron: "20 5 * * *"
+    - cron: "7,22,37,52 * * * 1-5"
+    - cron: "37 * * * 0,6"
+    - cron: "40 23 * * *"
     - cron: "10 4 * * 0"
   workflow_dispatch:
     inputs:
       mode:
-        description: "incremental (fast) or full (refetch all history)"
-        default: incremental
+        description: "quick (only updated FRED series), incremental, or full (refetch all history)"
+        default: quick
         type: choice
-        options: [incremental, full]
+        options: [quick, incremental, full]
 
 permissions:
   contents: write   # weekly keep-alive commit of status/last-run.json
@@ -44,6 +43,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      deploy: ${{ steps.pipeline.outputs.changed != 'false' || steps.mode.outputs.mode != 'quick' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -66,10 +67,16 @@ jobs:
         id: mode
         run: |
           MODE="${{ github.event.inputs.mode }}"
-          if [ "${{ github.event.schedule }}" = "10 4 * * 0" ]; then MODE=full; fi
+          case "${{ github.event.schedule }}" in
+            "10 4 * * 0") MODE=full ;;
+            "40 23 * * *") MODE=incremental ;;
+            "") ;;
+            *) MODE=quick ;;
+          esac
           echo "mode=${MODE:-incremental}" >> "$GITHUB_OUTPUT"
 
       - name: Run data pipeline
+        id: pipeline
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           # Previous build = last-known-good fallback and the base for incremental fetching.
@@ -107,6 +114,8 @@ jobs:
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" pipeline-status || echo "status push skipped"
 
       - name: Upload Pages artifact
+        # an identical quick build is not redeployed
+        if: steps.pipeline.outputs.changed != 'false' || steps.mode.outputs.mode != 'quick'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
@@ -124,6 +133,7 @@ jobs:
 
   deploy:
     needs: build
+    if: needs.build.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

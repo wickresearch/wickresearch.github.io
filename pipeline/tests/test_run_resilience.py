@@ -118,3 +118,41 @@ def test_us_curve_from_fred_with_treasury_fallback(tmp_path):
         runmod.treasury.fetch_curve = saved
     assert r.meta["CURVE_US"]["provider"] == "treasury" and r.obs["US_10Y"] == [("2026-01-02", 4.6)]
     assert any("served from treasury" in n for n in r.meta["CURVE_US"]["notes"])
+
+
+def test_fred_updates_paging_stops_at_cutoff():
+    from pipeline.providers import fred
+    pages = [{"seriess": [{"id": "CPIAUCSL", "last_updated": "2026-11-10 07:44:02-06"},
+                          {"id": "DGS10", "last_updated": "2026-11-09 15:20:00-06"}]}]
+    saved = fred._call
+    fred._call = lambda path, **p: pages[0] if p.get("offset", 0) == 0 else {"seriess": []}
+    try:
+        cutoff = dt.datetime(2026, 11, 10, 0, 0, tzinfo=dt.timezone.utc)
+        assert fred.fetch_updated_since(cutoff) == {"CPIAUCSL": "2026-11-10 07:44:02-06"}
+    finally:
+        fred._call = saved
+
+
+def test_quick_mode_reuses_unchanged_fred_series(tmp_path):
+    prev_dir = tmp_path / "prev"
+    pm = {"title": "x", "last_updated": "2026-11-01 07:00:00-05"}
+    for sid in ("UST10Y", "UST2Y"):
+        write_json(prev_dir / "series" / f"{sid}.json", series_payload(
+            sid, {"provider": "fred", "status": "ok", "provider_meta": pm, "retrieved_at": "2026-11-01T00:00:00+00:00"}, _synthetic(30)))
+    write_json(prev_dir / "catalog.json", {"generated_at": "2026-11-11T12:00:00+00:00", "series": {}})
+    calls = []
+    r = runmod.Run(tmp_path / "out", Previous(str(prev_dir)), "quick", {"UST10Y", "UST2Y"})
+    saved = (runmod.fred.fetch_updated_since, runmod.fred.fetch_series)
+    runmod.fred.fetch_updated_since = lambda cutoff: {"DGS2": "2026-11-11 12:00:00-06"}
+    runmod.fred.fetch_series = lambda key, start=None, with_meta=True: calls.append(key) or SeriesResult(obs=_synthetic(), meta=pm)
+    r.sources["providers"]["fred"]["enabled"] = True
+    try:
+        r.run_series()
+    finally:
+        runmod.fred.fetch_updated_since, runmod.fred.fetch_series = saved
+    assert calls == ["DGS2"]                       # only the series FRED reported as updated
+    assert r.meta["UST10Y"]["status"] == "ok" and "UST10Y" in r.unchanged
+    r.write_series_and_catalog(); r.run_extras()
+    assert r.write_build() is True
+    b = json.loads((tmp_path / "out" / "build.json").read_text())
+    assert b["data_hash"] and b["fred_unchanged"] == 1

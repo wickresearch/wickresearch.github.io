@@ -42,7 +42,7 @@ function transform(s, tf, start) {
 export async function render(root, { params, setParams, go }) {
   const cat = await D.catalog();
   const groups = (cat.library || []).filter((g) => g.ids.length);
-  root.append(header("FRED library", "The full FRED watchlist from the St. Louis Fed, grouped by theme. Select up to 8 series to chart them together. Series with different units get separate charts."));
+  root.append(header("FRED library", "FRED watchlist by theme · chart up to 8 series together"));
   if (!groups.length) { root.append(errorBox("The FRED library is not in this build's catalogue.")); return; }
   let sel = (params.ids ? params.ids.split(",") : prefs.get("lib.ids", ["DFF", "SOFR", "IORB", "UST2Y"])).filter((i) => cat.series[i]);
   let tf = params.tf || "level", win = params.win || "5Y";
@@ -52,7 +52,7 @@ export async function render(root, { params, setParams, go }) {
   const selHost = el("div", { class: "chips", style: "margin-bottom:8px" });
   builder.actions.append(segmented(TF, tf, (v) => { tf = v; draw(); }, "Transform"), segmented(WINDOWS.map(([k]) => [k, k]), win, (v) => { win = v; draw(); }, "Window"));
   builder.body.append(selHost, chartsHost);
-  builder.foot.append("Change = period-on-period (bp for rates, % for prices and indices). 1-year change compares with the value on or before the same date a year earlier. Rebased = 100 at the window start. Source: FRED, Federal Reserve Bank of St. Louis, unless the series says otherwise.");
+  builder.foot.append("Source: FRED, Federal Reserve Bank of St. Louis");
 
   const q = el("input", { type: "text", placeholder: "Search by name or FRED ID (e.g. SOFR, payrolls, DGS10)", "aria-label": "Search series", style: "width:min(420px,100%)" });
   const listHost = el("div");

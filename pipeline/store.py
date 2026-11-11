@@ -53,6 +53,8 @@ class Previous:
         self.base = (base or "").rstrip("/")
         self._cache: dict[str, Any] = {}
         self.seconds, self.requests = 0.0, 0  # reported in status.json
+        import time as _t
+        self._bust = str(int(_t.time()))  # bypass CDN caching of the previous build
 
     def get(self, rel: str) -> Any | None:
         if not self.base:
@@ -65,7 +67,7 @@ class Previous:
         self.requests += 1
         try:
             if self.base.startswith("http"):
-                r = requests.get(f"{self.base}/{rel}", timeout=20)
+                r = requests.get(f"{self.base}/{rel}", params={"b": self._bust}, timeout=20)
                 if r.status_code == 200:
                     val = r.json()
             else:

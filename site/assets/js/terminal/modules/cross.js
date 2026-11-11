@@ -4,7 +4,7 @@ import * as F from "../fmt.js";
 import { el, panel, errorBox, segmented, multiSelect, select, sourceLine, prefs } from "../ui.js";
 import { timeChart, heatmap } from "../chart.js";
 import * as S from "../stats.js";
-import { header, formula } from "./common.js";
+import { header } from "./common.js";
 
 export const UNIVERSE = [["SPX", "S&P 500"], ["NASDAQ", "Nasdaq"], ["NIKKEI", "Nikkei 225"], ["UST2Y", "UST 2Y"], ["UST10Y", "UST 10Y"], ["UST30Y", "UST 30Y"],
   ["BE10Y", "10Y breakeven"], ["TIPS10Y", "10Y real"], ["DE_10Y", "Bund 10Y"], ["USD_BROAD", "USD broad"], ["EURUSD", "EUR/USD"], ["USDJPY", "USD/JPY"],
@@ -26,7 +26,7 @@ export async function render(root, { params, setParams }) {
   const label = Object.fromEntries(UNIVERSE);
   let ids = (params.ids ? params.ids.split(",") : prefs.get("cross.ids", DEFAULT)).filter((i) => label[i]);
   let win = params.win || "1Y", freq = params.freq || "D";
-  root.append(header("Cross-asset", "Changes are returns (%) for prices and basis-point changes for yields and spreads. All instruments are aligned on common dates; crypto trades every day, so weekends are folded into Monday."));
+  root.append(header("Cross-asset", "Returns, correlations and drawdowns across assets"));
   const ctrl = el("div", { class: "panel", style: "padding:10px 12px;margin-bottom:12px" },
     el("div", { class: "p-sub", style: "margin-bottom:6px", text: "Instruments (saved in this browser):" }),
     multiSelect(UNIVERSE, ids, (v) => { ids = v; prefs.set("cross.ids", v); }, "Instruments"),
@@ -80,7 +80,7 @@ export async function render(root, { params, setParams }) {
     const priceIdx = use.map((id, k) => [id, k]).filter(([, k]) => kinds[k] === "pct");
     const yldIdx = use.map((id, k) => [id, k]).filter(([, k]) => kinds[k] !== "pct");
     if (priceIdx.length) {
-      const p = panel("Relative performance", { sub: "Prices rebased to 100 at the window start", span: yldIdx.length ? 2 : 3 });
+      const p = panel("Relative performance", { sub: "Rebased to 100", span: yldIdx.length ? 2 : 3 });
       p.body.append(timeChart(priceIdx.map(([id, k]) => ({ label: label[id], d: A.d, v: S.normalise(A.cols[k]) })), { units: "", range: "MAX", ranges: false, height: 260, filename: "relative_performance" }).el);
       grid.append(p.root);
     }
@@ -92,17 +92,12 @@ export async function render(root, { params, setParams }) {
     }
 
     // Correlation matrix
-    const pc = panel("Correlation of changes", { sub: `${freq === "W" ? "Weekly" : "Daily"} changes over the window (Pearson)`, span: 2 });
+    const pc = panel("Correlation of changes", { sub: `${freq === "W" ? "Weekly" : "Daily"} changes`, span: 3 });
     pc.body.append(heatmap(use.map((i) => label[i]), S.corrMatrix(ch)));
-    pc.body.append(el("p", { class: "note", text: "Orange = positive, blue = negative. Correlation measures co-movement, not causation, and it shifts between regimes (for example, the stock–bond sign flips between inflation-led and growth-led periods). Compare windows before relying on a number." }));
     grid.append(pc.root);
-    const pf = panel("How changes are measured", { span: 1 });
-    pf.body.append(formula("price instruments: r_t = P_t / P_{t−1} − 1"), formula("yields, spreads: Δ_t = (y_t − y_{t−1}) × 100 bp"),
-      formula("ann. vol = stdev(changes) × √252 (daily) or √52 (weekly)"), formula("max drawdown = min_t (P_t / max_{s≤t} P_s − 1)"));
-    grid.append(pf.root);
 
     // Rolling correlation – full common history of the pair
-    const pr = panel("Rolling correlation", { sub: "Pair over its full common history, 63-day window of daily changes", span: 2 });
+    const pr = panel("Rolling correlation", { sub: "63-day window", span: 2 });
     let a = params.a && use.includes(params.a) ? params.a : use[0], b = params.b && use.includes(params.b) ? params.b : use[1];
     const host = el("div");
     const drawRoll = () => {

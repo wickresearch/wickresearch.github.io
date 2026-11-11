@@ -4,7 +4,7 @@ import * as F from "../fmt.js";
 import { el, panel, errorBox, select, segmented, sourceLine } from "../ui.js";
 import { timeChart } from "../chart.js";
 import * as S from "../stats.js";
-import { header, formula } from "./common.js";
+import { header } from "./common.js";
 
 const GROWTH = [["INDPRO_YOY", "Industrial production y/y"], ["RETAIL_YOY", "Retail sales y/y"]];
 const INFL = [["CORE_CPI_YOY", "Core CPI y/y"], ["CPI_YOY", "CPI y/y"], ["CORE_PCE_YOY", "Core PCE y/y"]];
@@ -15,7 +15,7 @@ const DESC = { Reflation: "growth ↑ inflation ↑", Goldilocks: "growth ↑ in
 
 export async function render(root, { params, setParams }) {
   let g = params.g || "INDPRO_YOY", p = params.p || "CORE_CPI_YOY", look = +params.look || 3, lag = +params.lag || 2;
-  root.append(header("Regimes", "Months are classified by the direction of growth and inflation, using only data published by then. The table shows how assets moved in each regime. It describes history and is not a forecast."));
+  root.append(header("Regimes", "Asset performance by growth and inflation regime"));
   const ctrl = el("div", { class: "panel", style: "padding:10px 12px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:end" },
     el("label", { class: "fld" }, "Growth measure", select(GROWTH, g, (v) => { g = v; run(); })),
     el("label", { class: "fld" }, "Inflation measure", select(INFL, p, (v) => { p = v; run(); })),
@@ -41,11 +41,6 @@ export async function render(root, { params, setParams }) {
         el("dt", { text: `Growth Δ${look}m` }), el("dd", { class: "num", text: `${cur.dg >= 0 ? "+" : "−"}${Math.abs(cur.dg).toFixed(2)}pp` }),
         el("dt", { text: `Inflation Δ${look}m` }), el("dd", { class: "num", text: `${cur.dp >= 0 ? "+" : "−"}${Math.abs(cur.dp).toFixed(2)}pp` })));
     grid.append(pc.root);
-    const pm = panel("Method", { span: 2 });
-    pm.body.append(formula(`growth↑ ⇔ ${GROWTH.find((x) => x[0] === g)[1]} today − ${look} months ago ≥ 0;  inflation↑ likewise for ${INFL.find((x) => x[0] === p)[1]}`),
-      formula(`classification for observation month m is applied to month m + ${lag} (publication lag);  asset move in month M = end(M) vs end(M−1)`),
-      el("p", { class: "note", text: "Using direction rather than levels avoids fitted thresholds. The lag keeps the study free of look-ahead: a month's regime uses only data that had been published before it began. Samples are small and regimes overlap with policy cycles, so treat differences as descriptive." }));
-    grid.append(pm.root);
 
     // Stats per regime
     const rows = [];
@@ -73,7 +68,7 @@ export async function render(root, { params, setParams }) {
           return el("td", { class: "r num" }, el("span", { class: m > 0 ? "up" : m < 0 ? "down" : "", text: `${m >= 0 ? "+" : "−"}${Math.abs(m).toFixed(kind === "pct" ? 2 : 1)}${unit}` }),
             el("span", { class: "dim", text: ` (${S.median(x).toFixed(kind === "pct" ? 2 : 1)}) · ${Math.round((x.filter((v) => v > 0).length / x.length) * 100)}% · n=${x.length}` })); })
           : el("td", { colspan: 4, class: "dim", text: "unavailable" }), el("td", { class: "dim", text: first ? F.date(first, "month") : "" })))))));
-    pt.foot.append("Coverage differs by asset (for example, the S&P 500 has about 10 years on FRED), so compare within a row. ", Object.keys(failed).length ? `Unavailable: ${Object.keys(failed).join(", ")}` : "");
+    pt.foot.append(Object.keys(failed).length ? `Unavailable: ${Object.keys(failed).join(", ")}` : "");
     grid.append(pt.root);
 
     // Regime spells

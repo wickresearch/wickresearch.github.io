@@ -5,7 +5,7 @@ import { el, panel, errorBox, link, segmented } from "../ui.js";
 import { header } from "./common.js";
 
 export async function render(root, { params, setParams }) {
-  root.append(header("Calendar & news", "Release dates from the FRED release calendar; central-bank meeting dates transcribed from each bank's official calendar."));
+  root.append(header("Calendar & news", "Release dates and central-bank meetings"));
   const grid = el("div", { class: "grid3" });
   root.append(grid);
   const pc = panel("Upcoming", { span: 2 });
@@ -32,7 +32,7 @@ export async function render(root, { params, setParams }) {
     pc.actions.append(segmented([["all", "All"], ["key", "Key only"], ["cb", "Central banks"]], params.f || "all", (v) => { setParams({ f: v }); draw(v); }, "Filter"));
     pc.body.append(body);
     draw(params.f || "all");
-    pc.foot.append(cal.disclaimer || "", cal.notes?.length ? ` ${cal.notes.join(" ")}` : "");
+    if (cal.notes?.length) pc.foot.append(cal.notes.join(" "));
   } catch (e) { pc.body.append(errorBox(e.message)); }
 
   const pm = panel("Policy meeting schedule", { sub: cal ? `Verified against official pages on ${cal.verified_on}` : "", span: 1 });
@@ -47,7 +47,7 @@ export async function render(root, { params, setParams }) {
     })));
   }
 
-  const pn = panel("Official headlines", { sub: "Fed, ECB, Bank of England and Bank of Japan RSS feeds. Headlines and links only.", span: 3 });
+  const pn = panel("Official headlines", { sub: "Fed, ECB, Bank of England, Bank of Japan", span: 3 });
   grid.append(pn.root);
   try {
     const news = await D.json("news.json");

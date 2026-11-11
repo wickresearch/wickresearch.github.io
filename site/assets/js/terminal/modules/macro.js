@@ -15,15 +15,23 @@ const ROWS = [
     ["PERMITS", "Building permits", "index"], ["UMICH", "UMich sentiment", "rate"], ["PHILLY_FED", "Philly Fed mfg activity", "rate"], ["REAL_GDP", "Real GDP", "gdp"], ["GDPNOW", "GDPNow (estimate)", "rate"]]],
 ];
 
-// % change vs the observation exactly `lag` calendar months earlier (looked up by month key, so it works
-// for monthly and quarterly series and never bridges a gap).
+// % change vs the observation `lag` calendar months earlier (looked up by month key). A single
+// missing month in a monthly series (e.g. the unpublished Oct 2025 CPI) is bridged with the
+// geometric mean of its neighbours; such values are marked as estimates.
 const _mk = new WeakMap();
+const estimated = new Set();
 function pctChange(s, i, lag) {
   if (i < 0) return null;
   if (!_mk.has(s)) _mk.set(s, new Map(s.d.map((d, k) => [d.slice(0, 7), s.v[k]])));
-  const prev = _mk.get(s).get(shiftM(s.d[i], -lag));
+  const mk = _mk.get(s), key = shiftM(s.d[i], -lag);
+  let prev = mk.get(key);
+  if (prev == null && s.meta?.freq === "M") {
+    const a = mk.get(shiftM(s.d[i], -lag - 1)), b = mk.get(shiftM(s.d[i], -lag + 1));
+    if (a > 0 && b > 0) { prev = Math.sqrt(a * b); estimated.add(`${s.d[i]}|${lag}`); }
+  }
   return prev == null || prev === 0 ? null : (s.v[i] / prev - 1) * 100;
 }
+const isEst = (s, i, lag) => i >= 0 && estimated.has(`${s.d[i]}|${lag}`) && s.meta?.freq === "M";
 function shiftM(d, n) { const y = +d.slice(0, 4), m = +d.slice(5, 7) - 1 + n; const yy = y + Math.floor(m / 12), mm = ((m % 12) + 12) % 12; return `${yy}-${String(mm + 1).padStart(2, "0")}`; }
 
 function transformed(s, t) {
@@ -42,7 +50,7 @@ function transformed(s, t) {
 
 export async function render(root, { params, setParams, go }) {
   const cat = await D.catalog();
-  root.append(header("Inflation & labour", "Official US releases. 'Period' is the month the data describe; 'Published' is when the provider last updated the series."));
+  root.append(header("Inflation & labour", "US inflation, labour and activity releases"));
   const ids = ROWS.flatMap(([, r]) => r.map((x) => x[0]));
   const { ok } = await D.many([...ids, "USREC"]);
   const rec = ok.USREC ? recessionPeriods(ok.USREC) : [];
@@ -59,7 +67,7 @@ export async function render(root, { params, setParams, go }) {
       if (kind === "index" || kind === "gdp") {
         const lag = kind === "gdp" ? 3 : 1; // GDP is quarterly: q/q = 3 calendar months
         const y = pctChange(s, n, 12), mm = pctChange(s, n, lag), mp = pctChange(s, n - 1, lag), a3 = pctChange(s, n, 3);
-        a = y == null ? "—" : F.num(y, 1) + "%"; b = mm == null ? "—" : `${F.num(mm, kind === "gdp" ? 1 : 2)}%${kind === "gdp" ? " q/q" : ""}`;
+        a = y == null ? "—" : F.num(y, 1) + "%" + (isEst(s, n, 12) ? " (est.)" : ""); b = mm == null ? "—" : `${F.num(mm, kind === "gdp" ? 1 : 2)}%${kind === "gdp" ? " q/q" : ""}`;
         c = kind === "gdp" ? (mm == null ? "—" : F.num((Math.pow(1 + mm / 100, 4) - 1) * 100, 1) + "% saar") : a3 == null ? "—" : F.num((Math.pow(1 + a3 / 100, 4) - 1) * 100, 1) + "%";
         if (mp != null && kind !== "gdp") b += ` (prior ${F.num(mp, 2)}%)`;
       } else if (kind === "level_k") {
@@ -81,14 +89,13 @@ export async function render(root, { params, setParams, go }) {
   }
   pt.body.append(el("div", { class: "tbl-wrap" }, el("table", { class: "tbl" }, el("thead", {}, el("tr", {},
     ["Series", "Period", "Level", "y/y · change", "m/m · prior", "3m ann. · avg", "Published", "Units"].map((h, k) => el("th", { class: k >= 2 && k <= 5 ? "r" : "", text: h })))), tbody)));
-  pt.foot.append("y/y and 3m annualised use exact calendar-month matches; gaps are left blank, never interpolated. SA = seasonally adjusted where the source is. GDPNow is a model nowcast (Atlanta Fed), not an official release.");
   root.append(pt.root);
 
   // Configurable chart
   const grid = el("div", { class: "grid3" });
   root.append(grid);
   const opts = ids.filter((i) => ok[i]).map((i) => [i, ok[i].meta.name]);
-  const pc = panel("Chart a release", { sub: "Choose a series and transform. Shaded areas are NBER recessions.", span: 3 });
+  const pc = panel("Chart a release", { sub: "Shaded: NBER recessions", span: 3 });
   grid.append(pc.root);
   const host = el("div");
   let sel = params.s || "CORE_PCE", tf = params.t || "yoy";

@@ -108,7 +108,7 @@ The current `data/raw.json` was produced by the existing GitHub Actions job (las
 | **Portfolio risk, rates risk/DV01, stress tests, position sizing** | User inputs + verified series | **Verified (derived)** | Hypothetical/user-supplied positions only. Bond returns are a duration-based proxy from par yields. |
 | **Economic calendar (dates)** | P15, P14 | **Verified** | **No consensus or actual-vs-consensus values.** No free licensed source exists. |
 | **Research library** | P12 + `content/articles.yaml` | **Verified** (Medium). LinkedIn entries: manual. | |
-| **Real-time / intraday quotes** | — | **Not available** | The architecture is scheduled static builds. The terminal never labels data "live". |
+| **Real-time / intraday quotes** | — | **Not available** | No free licensed intraday source. The pipeline checks for new published data every 15 minutes on weekdays and the terminal refreshes itself when a new build lands; market prices remain end-of-day. |
 
 ## 6. FRED library (added 10 October 2026)
 

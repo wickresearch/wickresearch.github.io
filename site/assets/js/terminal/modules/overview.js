@@ -8,7 +8,7 @@ import { tiles, header, seriesHref } from "./common.js";
 
 export async function render(root, { go }) {
   const cat = await D.catalog();
-  root.append(header("Overview", "Key levels across rates, the front end, liquidity, inflation and markets. Click any tile for history, sources and statistics."));
+  root.append(header("Overview", "Rates, front end, liquidity, inflation and markets at a glance"));
   root.append(tiles(cat, [["UST2Y", "US 2Y"], ["UST10Y", "US 10Y"], ["US2S10S", "2s10s"], ["TIPS10Y", "10Y real"], ["BE10Y", "10Y breakeven"],
     ["EFFR", "EFFR"], ["SOFR", "SOFR"], ["IORB", "IORB"]]));
   root.append(tiles(cat, [["CORE_PCE_YOY", "Core PCE y/y"], ["CORE_CPI_YOY", "Core CPI y/y"], ["UNRATE", "Unemployment"], ["PAYROLLS_CHG", "Payrolls m/m"],
@@ -47,7 +47,7 @@ export async function render(root, { go }) {
         el("td", { class: `r num ${mv > 0 ? "up" : mv < 0 ? "down" : ""}`, text: mv == null ? "—" : `${mv > 0 ? "+" : "−"}${Math.abs(mv).toFixed(0)}bp` }),
         el("td", { class: "dim", text: i > 0 ? F.date(s.d[i]) : "—" }));
     }))));
-  pp.foot.append("BIS policy-rate data can lag announcements by several days. ", link("#cb", "Central banks →"));
+  pp.foot.append(link("#cb", "Central banks →"));
 
   // 1M cross-asset moves
   const pm = panel("One-month moves", { sub: "% change (prices) and bp (yields), latest vs 1 month earlier", span: 1 });
@@ -58,7 +58,7 @@ export async function render(root, { go }) {
     const m = cat.series[id], c = m.latest.chg["1m"];
     return { label, value: c, text: F.change(c, m.change, m.units)[0] };
   })));
-  pm.foot.append("Yields in bp, prices in %. *PAXG token, a proxy for spot gold. Different units: compare direction, not size.");
+  pm.foot.append("Yields in bp, prices in % · *PAXG gold token");
 
   // Calendar
   const pk = panel("Next on the calendar", { sub: "Official release dates and policy decisions", span: 1 });

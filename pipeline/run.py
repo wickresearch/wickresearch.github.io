@@ -1,6 +1,6 @@
 """Pipeline entry point.
 
-    python -m pipeline.run --out site/data [--previous URL_OR_DIR] [--mode incremental|full] [--only ID ...]
+    python -m pipeline.run --out site/data [--previous URL_OR_DIR] [--mode quick|incremental|full] [--only ID ...]
 
 Steps: fetch configured series → validate → merge with previous build → compute derived series →
 write static JSON (series, curves, catalog, calendar, news, research, events, status).
@@ -64,6 +64,10 @@ class Run:
         self.out = out
         self.prev = previous
         self.mode = mode
+        # "quick" = incremental, but FRED series are only re-downloaded if FRED reports an update
+        self.incr = mode in ("incremental", "quick")
+        self.fred_updates: dict[str, str] | None = None
+        self.unchanged: set[str] = set()
         self.only = only
         self.today = dt.date.today()
         self.sources = load_yaml("sources.yaml")
@@ -83,7 +87,7 @@ class Run:
 
     def start_for(self, sid: str, cfg_start: str, freq: str) -> tuple[str, list | None, dict | None]:
         prev_obs, prev_meta = self.prev_series(sid)
-        if self.mode == "incremental" and prev_obs and freq in LOOKBACK_DAYS:
+        if self.incr and prev_obs and freq in LOOKBACK_DAYS:
             last = calc.D(prev_obs[-1][0])
             return (max(calc.D(cfg_start), last - dt.timedelta(days=LOOKBACK_DAYS[freq])).isoformat(),
                     prev_obs, prev_meta)
@@ -104,7 +108,7 @@ class Run:
         return obs
 
     def accept(self, sid: str, provider: str, new_obs: list, prev_obs: list | None, meta: dict, status: str = "ok"):
-        obs = calc.merge(prev_obs or [], new_obs) if prev_obs and self.mode == "incremental" else new_obs
+        obs = calc.merge(prev_obs or [], new_obs) if prev_obs and self.incr else new_obs
         self.obs[sid] = obs
         meta.update(status=status, retrieved_at=now_utc() if status == "ok" else meta.get("retrieved_at"))
         self.meta[sid] = meta
@@ -198,7 +202,44 @@ class Run:
             s.setdefault(k, v)
         return s
 
+    def check_fred_updates(self):
+        """Quick mode: ask FRED which national series changed since the previous build."""
+        if self.mode != "quick" or not self.provider_enabled("fred"):
+            return
+        prev_cat = self.prev.get("catalog.json") or {}
+        try:
+            built = dt.datetime.fromisoformat(prev_cat["generated_at"].replace("Z", "+00:00"))
+        except (KeyError, ValueError, AttributeError):
+            log.info("quick mode: no previous build time – checking every FRED series")
+            return
+        cutoff = built - dt.timedelta(hours=3)  # margin for FRED's own update lag and clock skew
+        t0 = time.time()
+        try:
+            self.fred_updates = fred.fetch_updated_since(cutoff)
+        except Exception as exc:  # noqa: BLE001
+            self.record_error("fred", "series/updates", exc)
+            self.fred_updates = None
+        self.provider_log["fred"]["seconds"] += time.time() - t0
+        log.info("quick mode: %s FRED series updated since %s",
+                 "?" if self.fred_updates is None else len(self.fred_updates), cutoff.isoformat())
+
+    def reuse_unchanged(self, sid: str, s: dict, provider: str, key: str, prev_obs, prev_meta) -> bool:
+        """Quick mode: keep a FRED series from the previous build when FRED reports no update."""
+        if (self.fred_updates is None or provider != "fred" or key in self.fred_updates or not prev_obs
+                or not prev_meta or prev_meta.get("status") != "ok" or prev_meta.get("provider") != "fred"
+                or not prev_meta.get("provider_meta")):
+            return False
+        m = self.base_meta(s, provider, key)
+        m.update(provider_meta=prev_meta["provider_meta"], status="ok", retrieved_at=prev_meta.get("retrieved_at"),
+                 owner=m.get("owner") or prev_meta.get("owner"))
+        self.obs[sid], self.meta[sid] = prev_obs, m
+        self.unchanged.add(sid)
+        self.provider_log[provider]["ok"] += 1
+        self.provider_log[provider]["unchanged"] = self.provider_log[provider].get("unchanged", 0) + 1
+        return True
+
     def run_series(self):
+        self.check_fred_updates()
         lib = self.library_entries()
         self.fred_ids = {x["key"]: x["id"] for x in self.cfg["series"] + lib if x["provider"] == "fred"}
         for s in self.cfg["series"] + lib:
@@ -213,8 +254,11 @@ class Run:
             if not self.provider_enabled(provider):
                 self.fallback(sid, provider, prev_obs, prev_meta, meta)
                 continue
-            # Provider metadata (FRED notes/last_updated) is re-fetched on full runs or if missing.
-            need_meta = self.mode == "full" or not (prev_meta or {}).get("provider_meta")
+            if self.reuse_unchanged(sid, s, provider, key, prev_obs, prev_meta):
+                continue
+            # Provider metadata (FRED notes/last_updated) is re-fetched on full runs, if missing,
+            # or in quick mode (where a fetch means the series was just updated).
+            need_meta = self.mode in ("full", "quick") or not (prev_meta or {}).get("provider_meta")
             attempts = [(provider, key)] + ([(s["fallback"]["provider"], s["fallback"]["key"])] if s.get("fallback") else [])
             done = False
             for i, (p, k) in enumerate(attempts):
@@ -260,7 +304,7 @@ class Run:
     def fetch_curve(self, c: dict, prev_rows: dict | None) -> tuple[dict, list[str], list[str]]:
         p, notes = c["provider"], []
         last = max(prev_rows) if prev_rows else None
-        incr = self.mode == "incremental" and last is not None
+        incr = self.incr and last is not None
         since = (calc.D(last) - dt.timedelta(days=20)) if incr else calc.D(c.get("start", "2000-01-01"))
         if p == "fred":
             # Curve assembled from FRED constant-maturity series that run_series already fetched
@@ -343,7 +387,7 @@ class Run:
                             raise
                         self.record_error(prov, f"curve {cid}", exc)
                 rows = {d: r for d, r in rows.items() if d <= self.today.isoformat()}
-                if prev_rows and self.mode == "incremental":
+                if prev_rows and self.incr:
                     merged = dict(prev_rows)
                     merged.update(rows)
                     rows = merged
@@ -426,14 +470,21 @@ class Run:
                     # Monthly inputs need a wider as-of tolerance than daily ones.
                     tol = 40 if meta["freq"] in ("M", "Q") else 5
                     obs = calc.spread(a, b, s.get("scale", 1), tolerance_days=tol)
-                elif op == "yoy":
-                    obs = calc.yoy(a)
-                elif op == "mom":
-                    obs = calc.mom(a)
-                elif op == "ann3m":
-                    obs = calc.ann3m(a)
-                elif op == "ann1q":
-                    obs = calc.ann1q(a)
+                elif op in ("yoy", "mom", "ann3m", "ann1q"):
+                    if meta["freq"] == "M":
+                        # bridges isolated missing months (e.g. the unpublished Oct 2025 CPI)
+                        obs, est = calc.lag_transform(a, op)
+                        if est:
+                            meta["estimated"] = est
+                            recent = [d for d in est if d >= (self.today - dt.timedelta(days=400)).isoformat()]
+                            if recent:
+                                lag = {"yoy": 12, "mom": 1, "ann3m": 3, "ann1q": 3}[op]
+                                base = [calc._shift_months(d, lag) for d in recent]
+                                fmt = lambda x: calc.D(x).strftime("%b %Y")  # noqa: E731
+                                meta["note"] = (f"{', '.join(map(fmt, recent))}: estimated – the {', '.join(map(fmt, base))} "
+                                                "figure was not published by the source.")
+                    else:
+                        obs = getattr(calc, op)(a)
                 elif op == "diff":
                     obs = calc.diff(a)
                 elif op == "diff_avg3":
@@ -489,6 +540,9 @@ class Run:
                  ("auctions", self.build_auctions), ("events", self.build_events)]
         for name, fn in tasks:
             if self.only and name not in self.only:
+                continue
+            if self.mode == "quick" and name == "events" and self.prev.get("events.json"):
+                write_json(self.out / "events.json", self.prev.get("events.json"), compact=False)
                 continue
             t0 = time.time()
             try:
@@ -622,6 +676,46 @@ class Run:
                                              "timing": "Effective date per BIS; may differ from the announcement day (e.g. ECB)."}
         return {"types": types}
 
+    def write_build(self) -> bool:
+        """build.json: a small file the terminal polls to detect new data. Lists the series whose
+        latest observation changed versus the previous build and a hash of all published data.
+        Returns True if anything changed (the workflow skips deploying an identical quick build)."""
+        import hashlib
+        import json as _json
+        h = hashlib.sha256()
+        for sid in sorted(self.obs):
+            h.update(sid.encode())
+            h.update(_json.dumps(self.obs[sid], separators=(",", ":")).encode())
+        for name in ("calendar", "news", "research", "auctions"):
+            f = self.out / f"{name}.json"
+            if f.exists():
+                payload = _json.loads(f.read_text(encoding="utf-8"))
+                payload.pop("generated_at", None)
+                h.update(_json.dumps(payload, sort_keys=True).encode())
+        digest = h.hexdigest()[:16]
+        prev_cat = (self.prev.get("catalog.json") or {}).get("series", {})
+        prev_build = self.prev.get("build.json") or {}
+        changes = []
+        for sid, obs in self.obs.items():
+            m = self.meta.get(sid, {})
+            if not obs or sid.startswith("CURVE_"):
+                continue
+            pl = (prev_cat.get(sid) or {}).get("latest") or {}
+            d, v = obs[-1]
+            if pl and (pl.get("date") != d or (pl.get("value") is not None and abs(pl["value"] - v) > 1e-12)):
+                changes.append({"id": sid, "name": m.get("name") or sid, "date": d, "freq": m.get("freq"),
+                                "new_obs": pl.get("date") != d})
+        changes.sort(key=lambda c: (not c["new_obs"], c["freq"] == "D", c["name"]))
+        changed = digest != prev_build.get("data_hash")
+        now = now_utc()
+        write_json(self.out / "build.json", {
+            "built_at": now, "mode": self.mode, "data_hash": digest,
+            "data_changed_at": now if changed else prev_build.get("data_changed_at", now),
+            "changes": changes[:60] if changed else prev_build.get("changes", []),
+            "fred_checked": None if self.fred_updates is None else len(self.fred_updates),
+            "fred_unchanged": len(self.unchanged)}, compact=False)
+        return changed
+
     def write_status(self):
         cat_status = defaultdict(int)
         for m in self.meta.values():
@@ -640,7 +734,7 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default=str(ROOT / "site" / "data"))
     ap.add_argument("--previous", default=os.environ.get("WICK_PREVIOUS_BASE"),
                     help="Base URL or directory of the previous build (fallback + incremental fetch).")
-    ap.add_argument("--mode", choices=["incremental", "full"], default=os.environ.get("WICK_MODE", "incremental"))
+    ap.add_argument("--mode", choices=["quick", "incremental", "full"], default=os.environ.get("WICK_MODE", "incremental"))
     ap.add_argument("--only", nargs="*", help="Series IDs or extras (calendar news research auctions events) to run.")
     ap.add_argument("--log-level", default="INFO")
     args = ap.parse_args(argv)
@@ -657,6 +751,11 @@ def main(argv=None) -> int:
         run.run_derived()
         run.write_series_and_catalog()
         run.run_extras()
+        changed = run.write_build()
+        gh_out = os.environ.get("GITHUB_OUTPUT")
+        if gh_out:
+            with open(gh_out, "a", encoding="utf-8") as f:
+                f.write(f"changed={'true' if changed else 'false'}\n")
     except Exception:  # noqa: BLE001 – last-resort guard; still write status
         log.critical("pipeline crashed:\n%s", traceback.format_exc())
         run.provider_log["pipeline"]["errors"].append(traceback.format_exc()[-1000:])

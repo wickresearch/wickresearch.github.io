@@ -4,11 +4,11 @@ import * as F from "../fmt.js";
 import { el, panel, errorBox, sourceLine, typeBadge, link } from "../ui.js";
 import { timeChart, xyChart } from "../chart.js";
 import { billForwards } from "../stats.js";
-import { header, tiles, chartPanel, formula, seriesTable } from "./common.js";
+import { header, tiles, chartPanel, seriesTable } from "./common.js";
 
 export async function render(root, { go }) {
   const cat = await D.catalog();
-  root.append(header("Front end & Fed", "Administered rates set the corridor; overnight market rates trade inside it; Treasury bills and coupons add expectations and term premia."));
+  root.append(header("Front end & Fed", "Policy corridor, overnight rates and bills"));
   root.append(tiles(cat, [["FF_UPPER", "Target upper"], ["FF_LOWER", "Target lower"], ["IORB", "IORB"], ["ONRRP_RATE", "ON RRP rate"], ["EFFR", "EFFR"], ["SOFR", "SOFR"],
     ["TGCR", "TGCR"], ["UST3M", "3M bill (CMT)"], ["UST2Y", "2Y"], ["US2Y_EFFR", "2Y − EFFR"]]));
   const grid = el("div", { class: "grid3" });
@@ -30,21 +30,9 @@ export async function render(root, { go }) {
     pc.foot.append(sourceLine(avail.map((i) => ok[i].meta)), " · IORB is published ahead of its effective date, so it can show a future date.");
   } else pc.body.append(errorBox("Front-end rates unavailable."));
 
-  // Rate taxonomy table
-  const pt = panel("What each rate is", { span: 1 });
-  grid.append(pt.root);
-  const rows = [["FF_UPPER", "Set by the FOMC. The policy target."], ["IORB", "Paid on bank reserves. Anchors the top of the corridor."],
-    ["ONRRP_RATE", "Paid to money funds and others at the Fed's facility. Acts as a floor."], ["EFFR", "Volume-weighted median of overnight unsecured fed funds trades."],
-    ["SOFR", "Overnight Treasury repo (broad). The reference rate for SOFR futures and swaps."], ["TGCR", "Tri-party general collateral repo."],
-    ["UST3M", "3-month Treasury bill yield. Includes expected policy over 3 months plus bill supply and demand."]];
-  pt.body.append(el("dl", { class: "defs" }, rows.flatMap(([id, d]) => {
-    const m = cat.series[id];
-    return [el("dt", {}, m ? typeBadge(m) : "", " ", m ? m.name.replace(/\s*\(.*\)/, "") : id), el("dd", { text: d })];
-  })));
-  pt.foot.append("ADM = administered · O/N = overnight market rate · EOD = end-of-day yield. Futures-implied rates are not available from free sources.");
 
   // T-bill forward proxy
-  const pf = panel("Front-end pricing proxy: T-bill forward rates", { sub: "Forward rates implied by the bill curve, compared with EFFR", span: 2 });
+  const pf = panel("T-bill forward rates", { sub: "vs EFFR", span: 3 });
   grid.append(pf.root);
   try {
     const c = await D.curve("US");
@@ -66,8 +54,7 @@ export async function render(root, { go }) {
       el("tbody", {}, fw[0].f.map((seg, k) => el("tr", {}, el("td", { text: `${seg.from} → ${seg.to}` }),
         fw.map((x) => el("td", { class: "r num", text: x.f[k] ? x.f[k].fwd.toFixed(2) + "%" : "—" })),
         el("td", { class: "r num", text: effr == null ? "—" : `${((seg.fwd - effr) * 100).toFixed(0)}bp` })))))));
-    pf.body.append(formula("f(t₁,t₂) = [(1 + y₂·t₂)/(1 + y₁·t₁) − 1] / (t₂ − t₁)   with bill par yields y (simple-rate approximation)"));
-    pf.foot.append("Proxy only. Bill yields include supply, demand and term-premium effects and are not OIS- or futures-implied rates. No meeting probabilities are derived. Source: U.S. Treasury par curve.");
+    pf.foot.append("Source: U.S. Treasury par curve");
   } catch (e) { pf.body.append(errorBox(e.message)); }
 
   // SEP medians + FOMC dates
@@ -77,7 +64,7 @@ export async function render(root, { go }) {
     const sep = await D.series("SEP_FF_MEDIAN");
     ps.body.append(el("table", { class: "tbl" }, el("thead", {}, el("tr", {}, el("th", { text: "Year-end" }), el("th", { class: "r", text: "Median fed funds" }))),
       el("tbody", {}, sep.d.map((d, i) => el("tr", {}, el("td", { text: d.slice(0, 4) }), el("td", { class: "r num", text: F.value(sep.v[i], "%") }))))));
-    ps.body.append(el("p", { class: "note", text: `Latest Summary of Economic Projections, published ${sep.meta.provider_meta?.last_updated?.slice(0, 10) || "—"}. These are participants' projections (midpoint of the target range), not market pricing.` }));
+    ps.body.append(el("p", { class: "note", text: `Summary of Economic Projections, published ${sep.meta.provider_meta?.last_updated?.slice(0, 10) || "—"}` }));
   } catch (e) { ps.body.append(errorBox(e.message)); }
   try {
     const cal = await D.json("calendar.json");
@@ -88,11 +75,10 @@ export async function render(root, { go }) {
   } catch { /* calendar optional here */ }
 
   grid.append(await chartPanel("Fed funds: the long view", ["DFF", "DFEDTAR", "FF_UPPER", "FF_LOWER"], { units: "%", range: "MAX", span: 3, height: 280,
-    sub: "Effective fed funds rate since 1954, with the single target (1982–2008) and the target range (from Dec 2008)",
+    sub: "Effective rate and target since 1954",
     labels: { DFF: "Effective fed funds (daily)", DFEDTAR: "Target (to 2008)", FF_UPPER: "Target range upper", FF_LOWER: "Target range lower" },
-    steps: ["DFEDTAR", "FF_UPPER", "FF_LOWER"], note: "Source: FRED (DFF, DFEDTAR, DFEDTARU/L). Use the range buttons or drag to zoom into any cycle." }));
-  grid.append(await chartPanel("2Y Treasury minus EFFR", ["US2Y_EFFR"], { units: "bp", range: "5Y", span: 2, sub: "A rough gauge of the net easing (<0) or tightening (>0) priced over two years",
-    note: "Includes term premium. Use it for direction and changes, not as an implied number of cuts." }));
+    steps: ["DFEDTAR", "FF_UPPER", "FF_LOWER"] }));
+  grid.append(await chartPanel("2Y Treasury minus EFFR", ["US2Y_EFFR"], { units: "bp", range: "5Y", span: 2, sub: "bp" }));
   grid.append(await chartPanel("SOFR distribution", ["SOFR_P1", "SOFR", "SOFR_P99"], { units: "%", range: "1Y", span: 1, sub: "1st, median and 99th percentile (NY Fed)",
     labels: { SOFR_P1: "1st pct", SOFR: "SOFR (median)", SOFR_P99: "99th pct" } }));
   const tbl = panel("Front-end series", { span: 3 });

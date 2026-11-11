@@ -5,7 +5,7 @@ import { header, chartPanel, seriesTable } from "./common.js";
 
 export async function render(root, { go }) {
   const cat = await D.catalog();
-  root.append(header("Global macro", "Daily government curves where verified sources exist (US, Germany, UK, Japan, Canada); monthly OECD averages via FRED for longer cross-country history."));
+  root.append(header("Global macro", "Government curves and cross-country macro"));
   const grid = el("div", { class: "grid3" });
   root.append(grid);
   grid.append(await chartPanel("10Y yields, daily", ["US_10Y", "DE_10Y", "UK_10Y", "JP_10Y", "CA_10Y"], { units: "%", range: "3Y", span: 2,
@@ -14,8 +14,7 @@ export async function render(root, { go }) {
     labels: { US_DE_10Y: "US − DE", US_UK_10Y: "US − UK", US_JP_10Y: "US − JP", US_CA_10Y: "US − CA" } }));
   grid.append(await chartPanel("Euro-area sovereign spreads vs Bund (monthly)", ["IT_DE_10Y_M", "FR_DE_10Y_M"], { units: "bp", range: "10Y", span: 1, sub: "OECD monthly averages",
     labels: { IT_DE_10Y_M: "Italy − Germany", FR_DE_10Y_M: "France − Germany" } }));
-  grid.append(await chartPanel("Inflation: US vs euro area", ["CPI_YOY", "EA_HICP_YOY"], { units: "%", range: "10Y", span: 1, labels: { CPI_YOY: "US CPI y/y", EA_HICP_YOY: "Euro area HICP y/y" },
-    note: "UK CPI not shown: no verified current source (see Sources & status)." }));
+  grid.append(await chartPanel("Inflation: US vs euro area", ["CPI_YOY", "EA_HICP_YOY"], { units: "%", range: "10Y", span: 1, labels: { CPI_YOY: "US CPI y/y", EA_HICP_YOY: "Euro area HICP y/y" } }));
   grid.append(await chartPanel("Bund curve: 2s10s", ["DE2S10S"], { units: "bp", range: "5Y", span: 1 }));
   const pt = panel("Global rates and FX", { span: 3 });
   pt.body.append(seriesTable(cat, [["10Y government (daily)", ["US_10Y", "DE_10Y", "UK_10Y", "JP_10Y", "CA_10Y"]],

@@ -156,3 +156,16 @@ label.fld { display: inline-flex; flex-direction: column; gap: 3px; font-size: 1
 .defs { margin: 0; font-size: 13px; }
 .defs dt { color: var(--text); margin-top: 8px; } .defs dt:first-child { margin-top: 0; }
 .defs dd { margin: 2px 0 0; color: var(--text-3); font-size: 12.5px; }
+
+/* live updates */
+.t-status .live { color: var(--up); font-weight: 600; letter-spacing: .02em; }
+.t-status .dot.ok { animation: livepulse 2.4s ease-in-out infinite; }
+@keyframes livepulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(46, 160, 67, .55); } 50% { box-shadow: 0 0 0 4px rgba(46, 160, 67, 0); } }
+.toast, .update-pill { position: fixed; right: 16px; bottom: 16px; z-index: 50; max-width: min(520px, calc(100vw - 32px));
+  background: var(--card-2); color: var(--text); border: 1px solid var(--line-2); border-radius: var(--radius);
+  padding: 10px 14px; font-size: 13px; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); transition: opacity .5s, transform .5s; }
+.toast strong { color: var(--cream); margin-right: 4px; }
+.toast.out { opacity: 0; transform: translateY(8px); }
+.update-pill { cursor: pointer; font: inherit; font-size: 13px; border-color: var(--cream); }
+.update-pill:hover { background: var(--card); }
+@media (prefers-reduced-motion: reduce) { .t-status .dot.ok { animation: none; } }

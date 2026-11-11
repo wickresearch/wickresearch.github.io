@@ -16,16 +16,8 @@ export const GROUPS = [
 
 export async function render(root, { go }) {
   const cat = await D.catalog();
-  root.append(header("Markets", "End-of-day closes and latest published fixes. Badges: EOD = daily close, PUB = official published, PROXY = substitute instrument, CALC = derived. Click a row for history."));
+  root.append(header("Markets", "Cross-asset closes and fixes"));
   const p = panel("Cross-asset monitor", { span: 3 });
   p.body.append(seriesTable(cat, GROUPS, { go }));
-  p.foot.append("Changes: yields and spreads in bp, prices in %. '1D / prior' compares with the previous observation. FX: H.10 noon buying rates in New York (Fed). Copper is a monthly average.");
   root.append(p.root);
-  const nc = panel("Not covered, and why", { span: 3 });
-  nc.body.append(el("div", { class: "notcovered" },
-    el("p", {}, el("strong", { text: "European and other Asian equity indices (DAX, FTSE 100, Euro STOXX 50, Hang Seng, Shanghai): " }), "no free source that is both verified and licensed for redistribution was found. FRED no longer carries them."),
-    el("p", {}, el("strong", { text: "Spot gold and silver (LBMA): " }), "discontinued on FRED. Gold is shown through PAX Gold (PAXG-USD), a token backed by LBMA gold, labelled as a proxy. It can deviate from spot. Silver is not shown."),
-    el("p", {}, el("strong", { text: "MOVE index, ICE DXY, CME futures (SOFR, fed funds): " }), "proprietary or licensed. Substitutes: realised 10Y yield volatility, the Fed's broad dollar index, and the T-bill forward proxy in Front end & Fed."),
-    el("p", {}, el("strong", { text: "Real-time quotes: " }), "the site is rebuilt on a schedule (see Sources & status). Nothing on it is live.")));
-  root.append(nc.root);
 }

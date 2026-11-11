@@ -4,7 +4,7 @@ import * as F from "../fmt.js";
 import { el, panel, errorBox, link, sourceLine } from "../ui.js";
 import { timeChart } from "../chart.js";
 import { alignInner } from "../stats.js";
-import { header, seriesHref, formula } from "./common.js";
+import { header, seriesHref } from "./common.js";
 
 const SOURCES = {
   Fed: ["https://www.federalreserve.gov/monetarypolicy.htm", "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"],
@@ -18,7 +18,7 @@ const SOURCES = {
 
 export async function render(root, { go }) {
   const cat = await D.catalog();
-  root.append(header("Central banks", "Policy settings from the BIS central-bank policy-rate database, meeting dates from official calendars, and links to each bank's statements and minutes."));
+  root.append(header("Central banks", "Policy rates, decisions and official sources"));
   const ids = Object.keys(cat.series).filter((k) => k.startsWith("POL_"));
   const { ok, failed } = await D.many(ids);
   let cal = null; try { cal = await D.json("calendar.json"); } catch { /* optional */ }
@@ -52,16 +52,15 @@ export async function render(root, { go }) {
   });
   pt.body.append(el("div", { class: "tbl-wrap" }, el("table", { class: "tbl" }, el("thead", {}, el("tr", {}, ["Bank", "Rate", "Last move", "Move effective", "12m change", "Next decision", "Official sources"]
     .map((h, k) => el("th", { class: [1, 2, 4].includes(k) ? "r" : "", text: h })))), el("tbody", {}, rows))));
-  pt.foot.append("BIS: Fed = midpoint of the target range; ECB = deposit facility rate. Dates are effective dates (the ECB's take effect the following week). BIS can lag announcements by several days. Meeting dates for the SNB and RBA are not tracked.");
 
   const avail = ids.filter((id) => ok[id]);
-  const ph = panel("Policy-rate paths", { sub: "Step series; each step is a decision that changed the rate", span: 2 });
+  const ph = panel("Policy-rate paths", { sub: "Policy rates", span: 2 });
   ph.body.append(timeChart(avail.map((id) => ({ id, label: cat.series[id].bank, d: ok[id].d, v: ok[id].v, step: true })), { units: "%", range: "5Y", height: 300, filename: "policy_rates" }).el);
   ph.foot.append(sourceLine(avail.map((id) => ok[id].meta)));
   grid.append(ph.root);
 
   // Real policy rates (ex-post): policy rate minus latest core/headline inflation y/y
-  const pr = panel("Real policy rate (ex-post)", { sub: "Policy rate minus trailing inflation y/y, monthly", span: 1 });
+  const pr = panel("Real policy rate (ex-post)", { sub: "Monthly", span: 1 });
   grid.append(pr.root);
   try {
     const pairs = [["POL_US", "CORE_PCE_YOY", "Fed − core PCE"], ["POL_XM", "EA_HICP_YOY", "ECB DFR − euro HICP"]];
@@ -78,8 +77,6 @@ export async function render(root, { go }) {
       series.push({ label: lab, d, v });
     }
     pr.body.append(timeChart(series, { units: "%", range: "10Y", height: 260, filename: "real_policy_rates" }).el);
-    pr.body.append(formula("real rate(m) = policy rate at end of month m − inflation y/y for month m"));
-    pr.foot.append("Ex-post (backward-looking) measure. Inflation for month m is published 2–6 weeks after month-end.");
   } catch (e) { pr.body.append(errorBox(e.message)); }
 
   const pn = panel("Latest official communications", { span: 3 });
@@ -89,6 +86,5 @@ export async function render(root, { go }) {
     pn.body.append(el("div", { class: "grid3", style: "grid-template-columns:repeat(auto-fit,minmax(240px,1fr))" }, banks.map((b) => el("div", {},
       el("h3", { style: "font-size:13px;margin:0 0 6px", text: b }),
       el("ul", { class: "list" }, news.items.filter((n) => n.bank === b).slice(0, 6).map((n) => el("li", {}, el("span", { class: "when", text: F.date(n.date) }), link(n.url, n.title, true))))))));
-    pn.foot.append("From official RSS feeds; headlines and links only. Statements, minutes and speeches are on each bank's site (links in the table above).");
   } else pn.body.append(errorBox("News feed unavailable."));
 }

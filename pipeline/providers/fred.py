@@ -66,6 +66,35 @@ def fetch_series(series_id: str, start: str | None = None, with_meta: bool = Tru
     return SeriesResult(obs=obs, meta=meta)
 
 
+def _parse_updated(ts: str):
+    """FRED timestamps look like '2026-11-10 07:44:02-06' (US Central)."""
+    import datetime as dt
+    import re
+    ts = re.sub(r"([+-]\d\d)$", r"\1:00", (ts or "").strip())
+    return dt.datetime.fromisoformat(ts)
+
+
+def fetch_updated_since(cutoff, max_pages: int = 15) -> dict[str, str] | None:
+    """National ('macro') FRED series updated after `cutoff` (aware datetime):
+    {series_id: last_updated}. Results come newest first, so paging stops at the cutoff.
+    Returns None if the window could not be covered (caller then checks every series)."""
+    out: dict[str, str] = {}
+    for page in range(max_pages):
+        payload = _call("series/updates", filter_value="macro", limit=1000, offset=page * 1000)
+        rows = payload.get("seriess", [])
+        for r in rows:
+            try:
+                ts = _parse_updated(r.get("last_updated"))
+            except ValueError:
+                continue
+            if ts < cutoff:
+                return out
+            out[r["id"]] = r["last_updated"]
+        if len(rows) < 1000:
+            return out
+    return None
+
+
 def fetch_release_calendar(start: str, end: str) -> list[dict]:
     """Scheduled release dates (including future dates) between start and end."""
     payload = _call("releases/dates", realtime_start=start, realtime_end=end,

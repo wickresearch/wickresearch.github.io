@@ -106,7 +106,7 @@ python -m http.server 8000 -d site                      # open http://localhost:
 * Edit HTML, CSS and JS directly and reload the browser.
 
 ## 8. Running the data pipeline
-`python -m pipeline.run [--out DIR] [--previous URL|DIR] [--mode incremental|full] [--only …] [--log-level DEBUG]`
+`python -m pipeline.run [--out DIR] [--previous URL|DIR] [--mode quick|incremental|full] [--only …] [--log-level DEBUG]`
 
 * `--previous` (or env `WICK_PREVIOUS_BASE`) points to the last good build. In CI this is the live site's `/data`. It is used for incremental fetching and for fallback.
 * Outputs: `catalog.json` (every series with metadata, latest values, changes, status), `series/<ID>.json`, `curves/<US|DE|UK|JP|CA>.json`, `calendar.json`, `news.json`, `research.json`, `auctions.json`, `events.json` and `status.json` (run report).
@@ -126,13 +126,14 @@ python -m pipeline.probe --out probe.json       # live check of every provider (
 ## 10. Scheduled updates
 `.github/workflows/build-and-deploy.yml` runs on every push to `main` that touches the site, content or pipeline, and on this schedule (UTC):
 
-| Cron | Why |
-|---|---|
-| 13:20 Mon–Fri | NY Fed rates (~08:00 ET) and the Daily Treasury Statement are out |
-| 21:50 Mon–Fri | FRED/H.15 and US closes are updated |
-| 23:40 Mon–Fri | Treasury par curve (~18:00 ET) and UTC crypto close |
-| 05:20 daily | BoJ/MoF, BIS, RSS; weekend crypto |
-| 04:10 Sunday | **full** refetch (catches deep revisions) and a keep-alive commit |
+| Cron | Mode | What happens |
+|---|---|---|
+| every 15 min Mon–Fri (:07, :22, :37, :52) | `quick` | Asks FRED (`series/updates`) which national series changed since the last build and downloads only those; NY Fed, Treasury, BIS, Bundesbank, BoE, MoF, BoC, Coinbase and RSS are refreshed in full. Deploys only if the data changed. |
+| hourly Sat–Sun (:37) | `quick` | Crypto and weekend releases |
+| 23:40 daily | `incremental` | Re-checks every FRED series (safety net for the quick runs) |
+| 04:10 Sunday | `full` | Refetches complete histories (deep revisions) and makes a keep-alive commit |
+
+The terminal polls `data/build.json` every minute and redraws the open view when a new build lands, with a notice listing new releases.
 
 GitHub may delay cron runs. The terminal header always shows when the data were built, and each series shows its own observation date.
 

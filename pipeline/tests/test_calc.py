@@ -98,3 +98,19 @@ def test_is_stale_override():
     today = dt.date(2026, 10, 10)
     assert calc.is_stale("2026-10-02", "D", today)                 # default 6 days
     assert not calc.is_stale("2026-10-02", "D", today, 12)         # H.10 FX published weekly
+
+
+def test_lag_transform_bridges_single_missing_month():
+    # constant 0.3% m/m with October 2025 missing (as with the unpublished BLS CPI)
+    obs = [(f"{y}-{m:02d}-01", 100 * 1.003 ** ((y - 2024) * 12 + m))
+           for y in (2024, 2025, 2026) for m in range(1, 13) if (y, m) != (2025, 10) and not (y == 2026 and m > 10)]
+    out, est = calc.lag_transform(obs, "yoy")
+    assert out[-1][0] == "2026-10-01" and est == ["2026-10-01"]
+    assert out[-1][1] == pytest.approx((1.003 ** 12 - 1) * 100)
+    assert "2025-10-01" not in dict(out)          # no value invented for the missing month itself
+    m, est_m = calc.lag_transform(obs, "mom")
+    assert est_m == ["2025-11-01"] and dict(m)["2025-11-01"] == pytest.approx(0.3)
+    # longer gaps are not bridged
+    gap2 = [x for x in obs if x[0] not in ("2025-09-01", "2025-10-01")]
+    out2, est2 = calc.lag_transform(gap2, "yoy")
+    assert est2 == [] and "2026-10-01" not in dict(out2)

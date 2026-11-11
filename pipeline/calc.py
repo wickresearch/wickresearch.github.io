@@ -93,6 +93,33 @@ def _lag_ratio(obs: Obs, months: int) -> list[tuple[str, float]]:
     return out
 
 
+def fill_month_gaps(obs: Obs) -> tuple[Obs, set[str]]:
+    """Fill isolated one-month holes in a monthly series with the geometric mean of the two
+    neighbouring months (the approximation BLS itself used for the unpublished October 2025
+    CPI). Returns (filled series, set of filled dates). Longer gaps are left as they are."""
+    idx = {d[:7]: v for d, v in obs}
+    filled: dict[str, float] = {}
+    for d, v in obs:
+        gap, nxt = _shift_months(d, -1), _shift_months(d, -2)
+        if gap[:7] not in idx and nxt[:7] in idx and v > 0 and idx[nxt[:7]] > 0:
+            filled[gap] = math.sqrt(v * idx[nxt[:7]])
+    if not filled:
+        return obs, set()
+    return sorted({**dict(obs), **filled}.items()), set(filled)
+
+
+def lag_transform(obs: Obs, op: str) -> tuple[Obs, list[str]]:
+    """y/y, m/m or 3m-annualised change of a monthly level series, bridging isolated missing
+    months (see fill_month_gaps). Returns (series, dates whose value relies on a filled month).
+    No output is produced for the filled months themselves."""
+    lag = {"yoy": 12, "mom": 1, "ann3m": 3, "ann1q": 3}[op]
+    full, holes = fill_month_gaps(obs)
+    out = {"yoy": yoy, "mom": mom, "ann3m": ann3m, "ann1q": ann1q}[op](full)
+    out = [(d, v) for d, v in out if d not in holes]
+    est = [d for d, _ in out if _shift_months(d, lag) in holes]
+    return out, est
+
+
 def yoy(obs: Obs) -> Obs:
     return [(d, (r - 1) * 100) for d, r in _lag_ratio(obs, 12)]
 

@@ -1,13 +1,15 @@
 // Data access for the terminal. All files are static JSON produced by the pipeline (pipeline/run.py).
-// Requests are cached per page load; a failed file rejects its promise so callers can show
-// an explicit "unavailable" state for that panel only.
+// Requests are cached per data version; a failed file rejects its promise so callers can show
+// an explicit "unavailable" state for that panel only. build.json is polled to detect new data.
 
 const BASE = (document.documentElement.dataset.base || "/") + "data/";
 const cache = new Map();
+let version = ""; // data hash of the build currently on screen
 
 export function json(path) {
   if (!cache.has(path)) {
-    const p = fetch(BASE + path, { cache: "no-cache" }).then((r) => {
+    const url = BASE + path + (version ? `?v=${version}` : "");
+    const p = fetch(url, { cache: "no-cache" }).then((r) => {
       if (!r.ok) throw new Error(`${path} unavailable (HTTP ${r.status})`);
       return r.json();
     });
@@ -16,6 +18,23 @@ export function json(path) {
   }
   return cache.get(path);
 }
+
+/** Latest build marker, always fetched fresh (bypasses browser and CDN caches). */
+export async function build() {
+  const r = await fetch(`${BASE}build.json?t=${Date.now()}`, { cache: "no-store" });
+  if (!r.ok) throw new Error(`build.json unavailable (HTTP ${r.status})`);
+  return r.json();
+}
+
+/** Switch to a new data version: drop every cached file so the next reads are fresh. */
+export function setVersion(v) {
+  if (v === version) return false;
+  const first = !version;
+  version = v || "";
+  if (!first) cache.clear();
+  return !first;
+}
+export const currentVersion = () => version;
 
 export const catalog = () => json("catalog.json");
 export const status = () => json("status.json");

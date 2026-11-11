@@ -5,7 +5,7 @@ import * as F from "../fmt.js";
 import { el, panel, errorBox, segmented, select, numberInput, prefs, downloadCSV } from "../ui.js";
 import { timeChart, heatmap } from "../chart.js";
 import * as S from "../stats.js";
-import { header, formula } from "./common.js";
+import { header } from "./common.js";
 
 const INSTR = [
   { id: "SPX", label: "S&P 500", cls: "Equity" }, { id: "NASDAQ", label: "Nasdaq Composite", cls: "Equity" }, { id: "NIKKEI", label: "Nikkei 225 (JPY)", cls: "Equity" },
@@ -27,7 +27,7 @@ const PRESETS = {
 
 export async function render(root, { params, setParams }) {
   const tab = params.tab || "portfolio";
-  root.append(header("Risk & sizing", "Analytical tools for hypothetical or user-supplied positions. They describe exposures and potential losses. They are not recommendations or forecasts.",
+  root.append(header("Risk & sizing", "Portfolio risk, DV01 and position sizing for hypothetical positions",
     segmented([["portfolio", "Portfolio risk"], ["rates", "Rates DV01 & curve shocks"], ["sizing", "Position sizing"]], tab, (v) => { setParams({ tab: v }); show(v); }, "Tool")));
   const out = el("div");
   root.append(out);
@@ -55,8 +55,7 @@ async function portfolioTool(out, params, setParams) {
       el("label", { class: "fld" }, "NAV (USD)", numberInput(nav, (v) => (nav = v), { width: 120 })),
       el("label", { class: "fld" }, "Risk-free % p.a.", numberInput(+rf.toFixed(2), (v) => (rf = v), { width: 80 })),
       el("label", { class: "fld" }, "History", segmented([["1Y", "1Y"], ["3Y", "3Y"], ["5Y", "5Y"]], win, (v) => (win = v)))),
-    el("button", { class: "btn-sm", type: "button", text: "Calculate", onclick: () => calc() }),
-    el("p", { class: "note", text: "Treasury returns are a first-order proxy from constant-maturity par yields (carry − duration × Δyield). FX positions are long the quoted pair. Daily rebalancing to constant weights is assumed. Default risk-free rate = latest EFFR." }));
+    el("button", { class: "btn-sm", type: "button", text: "Calculate", onclick: () => calc() }));
   const res = el("div", { style: "margin-top:12px" });
   out.replaceChildren(el("div", { class: "grid3" }, inputs.root), res);
   await calc();
@@ -103,10 +102,9 @@ async function portfolioTool(out, params, setParams) {
       ["1-day ES 99%", `${k(S.expectedShortfall(pr, 0.99))} · ${usd(S.expectedShortfall(pr, 0.99))}`], ["Gross / net exposure", `${k(w.reduce((s, x) => s + Math.abs(x), 0), 0)} / ${k(w.reduce((s, x) => s + x, 0), 0)}`],
       ["Effective N (1/HHI)", conc.effectiveN.toFixed(1)],
     ].map(([a, b]) => el("div", { class: "kpi" }, el("div", { class: "k", text: a }), el("div", { class: "v num", style: "font-size:15px", text: b })))));
-    ks.foot.append(formula("VaR_c = −quantile(r, 1−c) (historical, 1-day);  ES_c = −mean(r | r ≤ quantile);  Sharpe = mean(r − r_f)/σ × √252;  Sortino uses downside deviation below r_f"));
     grid.append(ks.root);
 
-    const pc = panel("Risk contributions", { sub: "Euler decomposition of ex-post volatility", span: 2 });
+    const pc = panel("Risk contributions", { sub: "Contribution to volatility", span: 2 });
     const byCls = {};
     uniq.forEach((id, i) => { const c = INSTR.find((x) => x.id === id).cls; byCls[c] = (byCls[c] || 0) + rc.pct[i]; });
     pc.body.append(el("div", { class: "tbl-wrap" }, el("table", { class: "tbl" },
@@ -114,8 +112,7 @@ async function portfolioTool(out, params, setParams) {
       el("tbody", {}, uniq.map((id, i) => el("tr", {}, el("td", { text: INSTR.find((x) => x.id === id).label }), el("td", { class: "dim", text: INSTR.find((x) => x.id === id).cls }),
         el("td", { class: "r num", text: k(w[i], 1) }), el("td", { class: "r num", text: k(Math.sqrt(cov[i][i] * 252), 1) }), el("td", { class: "r num", text: k(rc.mrc[i], 1) }),
         el("td", { class: "r num", text: k(rc.crc[i], 2) }), el("td", { class: "r num", text: `${rc.pct[i].toFixed(1)}%` })))))),
-    el("p", { class: "note", text: `By class: ${Object.entries(byCls).map(([c, v]) => `${c} ${v.toFixed(0)}%`).join(" · ")}. Contributions sum to portfolio volatility; negative values are diversifiers.` }),
-    formula("σ_p = √(wᵀΣw);  MRC_i = (Σw)_i / σ_p;  CRC_i = w_i · MRC_i;  Σ CRC_i = σ_p"));
+    el("p", { class: "note", text: `By class: ${Object.entries(byCls).map(([c, v]) => `${c} ${v.toFixed(0)}%`).join(" · ")}` }));
     grid.append(pc.root);
     const ph = panel("Correlation of daily returns", { span: 1 });
     ph.body.append(heatmap(uniq.map((id) => id), S.corrMatrix(rets)));
@@ -140,11 +137,10 @@ async function portfolioTool(out, params, setParams) {
       el("tbody", {}, epRows.map((r) => el("tr", {}, el("td", { text: r.lab }), el("td", { class: "num dim", text: `${F.date(r.a)} → ${F.date(r.b)}` }),
         el("td", { class: `r num ${r.pnl > 0 ? "up" : r.pnl < 0 ? "down" : ""}`, text: k(r.pnl) }), el("td", { class: "r num", text: usd(r.pnl) }),
         el("td", { class: "dim", text: r.miss.length ? `partial – no data: ${r.miss.join(", ")}` : "full" })))))));
-    pe.foot.append("Close-to-close returns between the window dates (last observation on or before each date). Instruments without data for an episode contribute zero, flagged as partial.");
     grid.append(pe.root);
 
     // Factor shock scenarios
-    const pf = panel("Factor shock scenarios", { sub: "Linear betas to four market factors, estimated on daily data over the window", span: 1 });
+    const pf = panel("Factor shock scenarios", { sub: "Betas to four market factors", span: 1 });
     const fx = await D.many(FACTORS.map((f) => f[0]));
     const fl = FACTORS.filter((f) => fx.ok[f[0]]);
     if (fl.length === FACTORS.length) {
@@ -171,7 +167,6 @@ async function portfolioTool(out, params, setParams) {
         select(Object.keys(PRESETS).map((p) => [p, p]), "Hawkish repricing", (v) => { PRESETS[v].forEach((x, i) => { vals[i] = x; inputs[i].value = x; }); drawSc(); }, "Preset"),
         shocks, scOut);
       drawSc();
-      pf.foot.append("Shock sizes are assumptions, not forecasts. Betas are linear and estimated from daily moves, so they understate non-linear and crisis behaviour (correlations rise in stress). A factor that is also a holding has a beta of about 1 to itself.");
     } else pf.body.append(errorBox("Factor series unavailable."));
     grid.append(pf.root);
     res.replaceChildren(grid);
@@ -218,11 +213,10 @@ async function ratesTool(out) {
     }));
     scen();
   };
-  const pp = panel("Positions", { sub: "Positive DV01 = gains when yields fall (long duration). Futures: long contracts = long duration.", span: 3 });
+  const pp = panel("Positions", { sub: "Positive DV01 = gains when yields fall", span: 3 });
   pp.body.append(el("div", { class: "tbl-wrap" }, el("table", { class: "tbl" }, el("thead", {}, el("tr", {}, ["Type", "Tenor / months", "Quantity", "DV01", "Basis", ""].map((h, j) => el("th", { class: j === 3 ? "r" : "", text: h })))), tbody)),
-    el("button", { class: "btn-sm", type: "button", text: "+ Add position", onclick: () => { pos.push(["bond", "5Y", 1_000_000]); draw(); } }),
-    formula("Bond DV01 = notional × D_mod(par yield, T) × 0.0001;  D_mod = (1/y)[1 − (1 + y/2)^(−2T)];  SR3 = $25/bp;  ZQ = $5m × 30/360 × 0.0001 = $41.67/bp"));
-  pp.foot.append(`Latest US par curve ${F.date(c.d[n], "long")} (U.S. Treasury). Futures DV01s are exchange contract specifications. Bucketing uses the rate period each contract references.`);
+    el("button", { class: "btn-sm", type: "button", text: "+ Add position", onclick: () => { pos.push(["bond", "5Y", 1_000_000]); draw(); } }));
+  pp.foot.append(`US par curve ${F.date(c.d[n], "long")} (U.S. Treasury)`);
   const ps = panel("Curve shock P&L", { span: 3 });
   const scOut = el("div");
   let knots = [...CURVE_SCEN["Bear steepener"]];
@@ -237,7 +231,6 @@ async function ratesTool(out) {
   ps.actions.append(select(Object.keys(CURVE_SCEN).map((k) => [k, k]), "Bear steepener", (v) => { knots = [...CURVE_SCEN[v]]; knots.forEach((k, i) => (knotInputs[i].value = k)); scen(v); }, "Scenario"));
   ps.body.append(el("div", { class: "form-grid", style: "grid-template-columns:repeat(auto-fill,minmax(90px,1fr))" }, KNOT_T.map((t, i) => el("label", { class: "fld" }, `${t < 1 ? t * 12 + "m" : t + "y"} (bp)`, knotInputs[i]))),
     el("div", { style: "display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:8px 0" }, el("label", { class: "fld" }, "From", d1), el("label", { class: "fld" }, "To", d2), histBtn), scOut);
-  ps.foot.append("Shocks are linearly interpolated between knots and flat beyond them. P&L is first-order (DV01 × shock): it ignores convexity, carry and roll-down, and basis between futures and Treasuries. Preset shapes are illustrative assumptions.");
   function scen(title) {
     const items = pos.map((p) => ({ ...dv(p), p })).filter((x) => x.dv01 != null);
     const res = S.curveShockPnL(items.map((x) => ({ years: x.years, dv01: x.dv01, label: x.p })), KNOT_T.map((t, i) => [t, knots[i]]));
@@ -294,7 +287,7 @@ async function sizingTool(out) {
     const notional = r.units != null ? r.units * (st.entry ?? price) * st.multiplier : null;
     const posVol = notional != null && vol ? (notional * vol * Math.sqrt(252)) / st.capital * 100 : null;
     const newBook = posVol != null ? S.combinedVol(st.bookVol, posVol, st.rho) : null;
-    const line = (k, v, f) => el("tr", {}, el("td", { text: k }), el("td", { class: "r num", text: v == null || !Number.isFinite(v) ? "—" : v.toFixed(2) }), el("td", { class: "dim", style: "white-space:normal", text: f }));
+    const line = (k, v, f) => el("tr", {}, el("td", { text: k }), el("td", { class: "r num", text: v == null || !Number.isFinite(v) ? "—" : v.toFixed(2) }), );
     res.replaceChildren(
       el("div", { class: "kpis" }, el("div", { class: "kpi" }, el("div", { class: "k", text: "Size (binding constraint)" }), el("div", { class: "v num", text: r.units == null ? "—" : `${r.units.toLocaleString("en-GB")} units` }),
         el("div", { class: "s", text: r.binding ? `binding: ${r.binding}` : "enter inputs" })),
@@ -302,12 +295,11 @@ async function sizingTool(out) {
       el("div", { class: "kpi" }, el("div", { class: "k", text: "Notional" }), el("div", { class: "v num", text: notional == null ? "—" : `$${Math.round(notional).toLocaleString("en-GB")}` })),
       el("div", { class: "kpi" }, el("div", { class: "k", text: "Position vol (% capital, ann.)" }), el("div", { class: "v num", text: posVol == null ? "—" : `${posVol.toFixed(2)}%` })),
       el("div", { class: "kpi" }, el("div", { class: "k", text: "Book vol after (ann.)" }), el("div", { class: "v num", text: newBook == null ? "—" : `${st.bookVol.toFixed(1)}% → ${newBook.toFixed(2)}%` }))),
-      el("table", { class: "tbl" }, el("thead", {}, el("tr", {}, el("th", { text: "Constraint" }), el("th", { class: "r", text: "Max units (exact)" }), el("th", { text: "Formula" }))),
+      el("table", { class: "tbl" }, el("thead", {}, el("tr", {}, el("th", { text: "Constraint" }), el("th", { class: "r", text: "Max units (exact)" }), )),
         el("tbody", {}, line("Stop distance", r.stop, "risk budget / (|entry − stop| × multiplier)"),
           line("Volatility (1-day VaR)", r.vol, `risk budget / (σ_daily × price × multiplier × z); σ_daily = ${vol ? (vol * 100).toFixed(2) + "%" : "n/a"} from the last 63 daily returns`),
           line("DV01 budget", r.dv01, "DV01 budget / DV01 per unit"), line("Margin", r.margin, "margin capital / margin per unit"))),
-      formula("book σ after = √(σ_book² + σ_pos² + 2ρ·σ_book·σ_pos)"),
-      el("p", { class: "note", text: "A sizing calculation under stated assumptions, not a recommendation to trade. Margin and multipliers vary by venue and broker: check the contract specification." }));
+      el("p", { class: "note", text: "Not a recommendation to trade." }));
   }
   p.body.append(fields);
   const pr = panel("Result", { span: 2 });
