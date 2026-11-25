@@ -1,0 +1,18 @@
+{
+  "_comment": "One object per strategy, newest first. Rendered as cards on /research/ and /research/strategies/ by /assets/js/strategy.js. Every figure must come from the strategy's report; give its basis in 'basis'.",
+  "strategies": [
+    {
+      "slug": "zq-meeting-hedged",
+      "title": "Trading the Shape of the Fed Funds Curve Around FOMC Meetings",
+      "line": "A meeting-hedged calendar basket in 30-Day Fed Funds futures that cancels every scheduled FOMC decision and trades the residual deviation.",
+      "date": "2026-11-25",
+      "instrument": "CME 30-Day Fed Funds futures (ZQ)",
+      "basis": "1-minute backtest, 30 Sep 2025 to 24 Sep 2026, mid fills, net of fees",
+      "figures": [
+        { "label": "Net P&L", "value": "$31,622" },
+        { "label": "Sharpe", "value": "2.88" },
+        { "label": "Trades", "value": "183" }
+      ]
+    }
+  ]
+}

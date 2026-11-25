@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading the Shape of the Fed Funds Curve Around FOMC Meetings — Wick Research</title>
+<meta name="description" content="A meeting-hedged calendar basket in CME 30-Day Fed Funds futures that cancels every scheduled FOMC decision and trades the residual deviation. 1-minute backtest, 30 Sep 2025 to 24 Sep 2026: $31,622 net on 183 trades, Sharpe 2.88.">
+<link rel="canonical" href="https://wickresearch.github.io/research/strategies/zq-meeting-hedged/">
+<meta name="theme-color" content="#0D1B2A">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wick Research">
+<meta property="og:title" content="Trading the Shape of the Fed Funds Curve Around FOMC Meetings">
+<meta property="og:description" content="A meeting-hedged calendar strategy in 30-Day Fed Funds futures. Research summary by Ishrit Tewari.">
+<meta property="og:url" content="https://wickresearch.github.io/research/strategies/zq-meeting-hedged/">
+<meta property="og:image" content="https://wickresearch.github.io/assets/img/og-image.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/wr-favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/assets/img/wr-icon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="/assets/img/wr-icon-192.png"><link rel="apple-touch-icon" href="/assets/img/wr-icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/strategy.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "ScholarlyArticle", "headline": "Trading the Shape of the Fed Funds Curve Around FOMC Meetings", "alternativeHeadline": "A meeting-hedged calendar strategy in 30-Day Fed Funds futures", "author": {"@type": "Person", "name": "Ishrit Tewari", "@id": "https://wickresearch.github.io/about/#ishrit-tewari"}, "publisher": {"@id": "https://wickresearch.github.io/#org"}, "datePublished": "2026-11-25", "url": "https://wickresearch.github.io/research/strategies/zq-meeting-hedged/"}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-nav">
+  <div class="container">
+    <a class="brand" href="/" aria-label="Wick Research – home"><img src="/assets/img/logo.png" alt="Wick Research" width="139" height="38"></a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <nav class="nav-links" id="nav-links" aria-label="Main">
+      <a href="/terminal/" class="nav-cta">Macro Terminal</a>
+      <a href="/research/" aria-current="page">Research</a>
+      <a href="/framework/">Framework</a>
+      <a href="/projects/">Projects</a>
+      <a href="/about/">About</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+
+<!-- 1. Title and abstract -->
+<section class="section st-head" style="padding-bottom:28px">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/research/">Research</a> / <a href="/research/strategies/">Strategy research</a></nav>
+    <div class="eyebrow">Strategy research · Rates</div>
+    <h1>Trading the Shape of the Fed Funds Curve Around FOMC Meetings</h1>
+    <p class="lede">A basket of consecutive 30-Day Fed Funds futures, weighted so that every scheduled FOMC decision inside it cancels, leaves a small deviation that reverts; the strategy supplies liquidity against it.</p>
+    <div class="st-meta"><span>Ishrit Tewari</span><span>25 November 2026</span><span>CME 30-Day Fed Funds futures (ZQ)</span></div>
+  </div>
+</section>
+
+<!-- 2. Headline figures and chart -->
+<section class="section" style="padding-top:0" aria-labelledby="res-h">
+  <div class="container">
+    <h2 id="res-h" class="sr-only" style="position:absolute;left:-9999px">Headline results</h2>
+    <span class="basis">1-minute backtest · 30 Sep 2025 – 24 Sep 2026 · fills at mid · net of fees</span>
+    <div class="figs">
+      <div class="fig"><div class="k">Net P&amp;L</div><div class="v">$31,622</div><div class="d">31.6% of $100,000 reference capital</div></div>
+      <div class="fig"><div class="k">Sharpe</div><div class="v">2.88</div><div class="d">Sortino 4.88 · 95% bootstrap 0.9 to 4.9</div></div>
+      <div class="fig"><div class="k">Max drawdown</div><div class="v">$4,339</div><div class="d">4.3% of reference capital</div></div>
+      <div class="fig"><div class="k">Trades</div><div class="v">183</div><div class="d">Hit rate 68.9% · profit factor 3.27</div></div>
+    </div>
+    <div class="chart-card">
+      <h3>Net P&amp;L by month, 1-minute backtest</h3>
+      <p class="sub">Hover or tap a month for values. Twelve of 13 months were positive. September 2025 and September 2026 are part months. Monthly figures are the report&rsquo;s, rounded to the dollar, so the cumulative line ends at $31,621 against the unrounded total of $31,622.</p>
+      <div class="chart" data-pnl-chart="data.json"><p class="muted">Loading chart…</p></div>
+      <details class="table-toggle"><summary>Show as a table</summary><div data-pnl-table></div></details>
+    </div>
+    <p class="defs">All dollar figures are net of $2.75 per contract round trip, all-in, on every fill. Fills are at the mid of recorded 1-minute bid/ask quotes; slippage and queue position are not modelled. Sharpe and Sortino: mean marked daily P&amp;L over its standard deviation (downside deviation) &times; &radic;252, flat days counted as zero, no risk-free rate deducted (258 business days). Returns are on a $100,000 reference capital and are not annualised; on peak margin of $74,177 the return was 42.6%. Margin uses CME maintenance rates with an assumed 80% netting credit, which is not a CME figure. This is a backtest, not a record of live trading.</p>
+  </div>
+</section>
+
+<!-- 3. Core idea -->
+<section class="section band" aria-labelledby="idea-h">
+  <div class="container">
+    <div class="cols-2">
+      <div>
+        <h2 id="idea-h">How the basket cancels the decision</h2>
+        <p>A ZQ contract settles at 100 minus the average daily effective fed funds rate (EFFR) over its calendar month. If the FOMC moves the rate on day <i>d</i> of an <i>N</i>-day month, that month&rsquo;s average is a mix of the old and new rates with weights <i>d</i>/<i>N</i> and (<i>N</i>&minus;<i>d</i>)/<i>N</i>, the weights Kuttner (2001) uses to extract policy surprises. The month before sits wholly at the old rate and the month after wholly at the new one, so lots in the ratio below have zero exposure to both rates, whatever the Fed does.</p>
+        <div class="eqn">before : meeting : after  =  d : −N : (N−d)</div>
+        <p>With a second decision in a neighbouring month, the basket extends to four or five legs and the condition becomes <b>F</b>&prime;<i>x</i> = 0, where <b>F</b> holds each month&rsquo;s share of days in each rate regime. The lots sum to zero, so a parallel shift in expected EFFR also cancels. The rate level is hedged with the same contract at other expiries, with no basis to another market.</p>
+        <p><b>Worked example, Sep-2026.</b> Decisions on 16 September (<i>d</i> = 16, <i>N</i> = 30) and 28 October (<i>d</i> = 28, <i>N</i> = 31); legs August to November. Exact ratios +0.5333, &minus;1, +0.5167, &minus;0.0500. Whole lots +1 &minus;2 +1 +0 leave at most 0.0968 lots exposed to any regime rate, so a 25bp decision moves one unit by at most 0.0968 &times; $41.67 &times; 25 = $100.81, against $362 for the average winning trade.</p>
+      </div>
+      <div>
+        <div class="diagram" role="img" aria-label="Diagram: the month before is entirely at the old rate, the meeting month is split at day d between old and new rates, the month after is entirely at the new rate. Lots of plus d, minus N and plus N minus d give zero exposure to both rates.">
+          <svg viewBox="0 0 440 330" aria-hidden="true">
+            <text x="0" y="18" class="t-strong">Days at each rate</text>
+            <rect class="old" x="0" y="34" width="14" height="14" rx="2"/><text x="20" y="46" class="t-muted">old rate</text>
+            <rect class="new" x="100" y="34" width="14" height="14" rx="2"/><text x="120" y="46" class="t-muted">new rate</text>
+            <text x="376" y="78" class="t-muted">Lots</text>
+            <text x="0" y="104">Before</text>
+            <text x="0" y="152">Meeting</text>
+            <text x="0" y="200">After</text>
+            <rect class="old" x="86" y="86" width="276" height="26" rx="3"/>
+            <rect class="old" x="86" y="134" width="140" height="26" rx="3"/>
+            <rect class="new" x="226" y="134" width="136" height="26" rx="3"/>
+            <rect class="new" x="86" y="182" width="276" height="26" rx="3"/>
+            <line class="dec" x1="226" x2="226" y1="76" y2="218"/>
+            <text x="156" y="152" text-anchor="middle" style="fill:#fff">d / N</text>
+            <text x="294" y="152" text-anchor="middle" class="t-cream">(N−d) / N</text>
+            <text x="226" y="236" text-anchor="middle" class="t-cream">decision on day d</text>
+            <text x="376" y="104" class="t-strong">+d</text>
+            <text x="376" y="152" class="t-strong">−N</text>
+            <text x="376" y="200" class="t-strong">+(N−d)</text>
+            <line class="rule" x1="0" x2="440" y1="256" y2="256"/>
+            <text x="0" y="284">Old rate</text>
+            <text x="86" y="284">d·1 − N·(d/N) <tspan class="t-strong">= 0</tspan></text>
+            <text x="0" y="316">New rate</text>
+            <text x="86" y="316">−N·(N−d)/N + (N−d)·1 <tspan class="t-strong">= 0</tspan></text>
+          </svg>
+        </div>
+        <p class="small muted" style="margin-top:12px"><b style="color:var(--text)">Why the basket moves at all.</b> Hedgers and dealers trade single months, which pushes one month away from its neighbours; futures carry time-varying premia (Piazzesi and Swanson, 2008); EFFR moves against the Fed&rsquo;s administered rates and has calendar effects (Bech and Klee, 2011; Hamilton, 1996); settlements sit on a 0.5bp grid. The rules forecast nothing about rates: the trade is paid for taking the other side of single-month flow.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Proof points -->
+<section class="section" aria-labelledby="proof-h">
+  <div class="container">
+    <h2 id="proof-h">Evidence</h2>
+    <div class="points">
+      <div class="point">
+        <span class="basis">1-minute backtest</span>
+        <h3>The hedge holds in the P&amp;L</h3>
+        <p>Daily P&amp;L regressed on the change in the rate level: $8.56 per bp (<i>t</i> = 0.6). On the change in curve slope: &minus;$27.09 per bp (<i>t</i> = &minus;1.1). <i>R</i>&sup2; of both 0.01.</p>
+        <p>The eight FOMC decision days averaged $134, against $122 on other days (<i>p</i> = 0.96). With eight days the test has little power; it is consistent with the hedge rather than proof of it.</p>
+      </div>
+      <div class="point">
+        <span class="basis">1-minute backtest</span>
+        <h3>The result does not rest on a few trades</h3>
+        <p>Mean trade $173, median $121, <i>t</i> = 5.1. Without the five best trades, net P&amp;L is $22,691. The 95% bootstrap interval for the Sharpe ratio is 0.9 to 4.9.</p>
+        <p>Re-run at other fees, with thresholds recomputed: $45,346 at $2.00, $28,924 at $3.00 and $11,396 at $4.00 per contract round trip (Sharpe 1.28). Break-even is about $5.28.</p>
+      </div>
+      <div class="point">
+        <span class="basis">Settlement-based reconstruction (model)</span>
+        <h3>2010&ndash;2025, under the same rules</h3>
+        <p>Only daily settlements exist before 2026, so the same rules were run on them using relationships measured on the 1-minute year. Net P&amp;L per year of structures: mean $32,970 (s.e. $4,862), median $26,575, range $17,043 to $85,655; positive in 16 of 16 years.</p>
+        <p>This is model-based, not a record of fills. Because it reproduces the average behaviour of a profitable year, positive years are largely true by construction. It is informative about how the calendar changes outcomes, not as a forecast.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Depth finding, limitations and capacity -->
+<section class="section band" aria-labelledby="find-h">
+  <div class="container">
+    <div class="cols-2">
+      <div>
+        <h2 id="find-h">Where the cost drag sits</h2>
+        <p>Fees took 52% of gross profit in the 1-minute backtest ($34,424 of $66,047). Fees scale with every contract in a unit, while gross profit scales with the quarter-month lots, so a structure that needs many contracts to hedge pays far more per unit of edge.</p>
+        <p>The three four-contract structures made $20,780 of the $31,622. A 22-contract structure traded the most (72 trades) and kept $1,820, with fees at 88% of its gross. Which structures a year offers is set by the FOMC calendar: a decision near mid-month gives the simple 1 : &minus;2 : 1. In the reconstruction, the share of trades in small structures has a rank correlation of 0.60 with yearly net P&amp;L, and the two best years, 2015 and 2018, had 72% and 79% of trades in four-contract structures.</p>
+      </div>
+      <div>
+        <h2>Limitations and capacity</h2>
+        <ul class="prose" style="padding-left:18px;margin:0">
+          <li>One year of 1-minute data: 183 trades in one rate regime. The rules were designed on the same year, and the 2010&ndash;2025 figures extrapolate it.</li>
+          <li>Fills are at the mid. The net edge is $1.26 per contract fill, about 6% of a $20.835 tick, so execution, including completing every leg (Kozhan and Tham, 2012), decides whether the result can be captured.</li>
+          <li>Capacity is set by volume in the thinnest deferred leg, not by capital. Peak participation on entries was 8.3% of a leg&rsquo;s daily volume; peak margin was $74,177.</li>
+          <li>The margin netting credit is an assumption (tested at 70% and 85%), and position sizing is unresolved.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Call to action and references -->
+<section class="section" aria-labelledby="cta-h">
+  <div class="container">
+    <div class="card cta">
+      <div>
+        <h2 id="cta-h" style="font-size:20px;margin:0 0 4px">Full report available on request</h2>
+        <p class="muted">39 pages: construction, data, method, results by year and structure, costs and execution, sensitivity, and risk.</p>
+      </div>
+      <a class="btn primary" href="mailto:itewari.mifft2027@london.edu?subject=Fed%20Funds%20futures%20strategy%20report">itewari.mifft2027@london.edu</a>
+    </div>
+    <h3 style="color:#fff;font-size:15px;margin-top:36px">References</h3>
+    <ol class="refs">
+      <li>Bech, M. L. and Klee, E. (2011). The mechanics of a graceful exit: interest on reserves and segmentation in the federal funds market. <i>Journal of Monetary Economics</i> 58(5), 415&ndash;431.</li>
+      <li>Hamilton, J. D. (1996). The daily market for federal funds. <i>Journal of Political Economy</i> 104(1), 26&ndash;56.</li>
+      <li>Kozhan, R. and Tham, W. W. (2012). Execution risk in high-frequency arbitrage. <i>Management Science</i> 58(11), 2131&ndash;2149.</li>
+      <li>Kuttner, K. N. (2001). Monetary policy surprises and interest rates: evidence from the Fed funds futures market. <i>Journal of Monetary Economics</i> 47(3), 523&ndash;544.</li>
+      <li>Piazzesi, M. and Swanson, E. T. (2008). Futures prices as risk-adjusted forecasts of monetary policy. <i>Journal of Monetary Economics</i> 55(4), 677&ndash;691.</li>
+    </ol>
+  </div>
+</section>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div>
+      <img class="foot-logo" src="/assets/img/logo.png" alt="Wick Research" width="110" height="30">
+      <div>© <span data-year></span> Ishrit Tewari · London</div>
+      <p class="disclaimer">Research and educational material only. Nothing on this site is investment advice or an offer to buy or sell any security. Strategy figures on this page come from a backtest and a model-based reconstruction, not from live trading.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/terminal/">Terminal</a><a href="/research/">Research</a><a href="/framework/">Framework</a>
+      <a href="/projects/">Projects</a><a href="/about/">About</a>
+      <a href="https://www.linkedin.com/company/wick-research/" rel="noopener">LinkedIn</a>
+      <a href="https://medium.com/@ishritt" rel="noopener">Medium</a>
+    </nav>
+  </div>
+</footer>
+<script type="module" src="/assets/js/site.js"></script>
+<script type="module" src="/assets/js/strategy.js"></script>
+</body>
+</html>

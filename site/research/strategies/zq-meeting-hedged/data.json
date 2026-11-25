@@ -1,0 +1,56 @@
+{
+ "title": "Trading the Shape of the Fed Funds Curve Around FOMC Meetings",
+ "source": "Ishrit Tewari, report of November 2026",
+ "monthly_backtest": {
+  "basis": "1-minute backtest on recorded bid/ask quotes, fills at mid, net of $2.75 per contract round trip",
+  "period": "30 September 2025 to 24 September 2026; September 2025 and September 2026 are part months",
+  "source_table": "Table 21 (Total column)",
+  "units": "USD, net",
+  "note": "Monthly figures are rounded to whole dollars in the report; they sum to $31,621 against the reported total of $31,622.45.",
+  "months": [
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07",
+   "2026-08",
+   "2026-09"
+  ],
+  "net": [
+   543,
+   4075,
+   1406,
+   3466,
+   4226,
+   2403,
+   3047,
+   -1126,
+   2497,
+   1998,
+   2749,
+   20,
+   6317
+  ],
+  "cumulative": [
+   543,
+   4618,
+   6024,
+   9490,
+   13716,
+   16119,
+   19166,
+   18040,
+   20537,
+   22535,
+   25284,
+   25304,
+   31621
+  ]
+ }
+}
